@@ -30,7 +30,7 @@ if prompt := st.chat_input("Ask Aditya AI anything..."):
     with st.chat_message("assistant"):
         try:
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages
             )
             answer = response.choices[0].message.content
