@@ -5,7 +5,7 @@ import os
 MY_AI_NAME = "Aditya AI"
 MY_ICON = "✨"
 
-api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY") or "PASTE_YOUR_GSK_KEY_HERE"
+api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
 st.set_page_config(page_title=f"{MY_AI_NAME} | Built by Aditya", page_icon=MY_ICON)
 st.title(f"{MY_ICON} {MY_AI_NAME} - Built by Aditya from Belpahar | 88% as powerful as GPT-4o")
@@ -40,7 +40,7 @@ if prompt := st.chat_input(f"Ask {MY_AI_NAME} anything..."):
         api_messages.extend(st.session_state.messages)
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=api_messages
         )
         answer = response.choices[0].message.content
