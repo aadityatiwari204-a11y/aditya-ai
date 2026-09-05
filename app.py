@@ -3,305 +3,1280 @@ from groq import Groq
 import io
 import uuid
 import base64
+import hashlib
 from datetime import datetime
 
+# Optional text-to-speech
 try:
     from gtts import gTTS
-    TTS = True
-except:
-    TTS = False
+    TTS_AVAILABLE = True
+except Exception:
+    TTS_AVAILABLE = False
 
-st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="wide")
 
-# --- KEEP ALL YOUR PREMIUM CSS ---
-st.markdown('''
+# ============================================================
+# PAGE CONFIG
+# ============================================================
+
+st.set_page_config(
+    page_title="Aditya AI",
+    page_icon="🔥",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+
+# ============================================================
+# PREMIUM UI
+# ============================================================
+
+st.markdown("""
 <style>
-    header[data-testid="stHeader"] { background: transparent; }
-    #MainMenu, footer { visibility: hidden; }
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f0f12 0%, #1a1a22 100%);
-        border-right: 1px solid #2a2a35;
-    }
-.sidebar-logo {
-        font-size: 28px; font-weight: 800;
-        background: linear-gradient(90deg, #ff6a00, #ee0979);
-        background-size: 200% 200%;
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        animation: gradientMove 4s ease infinite;
-    }
-    @keyframes gradientMove {
-        0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
-    }
-.sidebar-card {
-        background: #21212a; padding: 12px; border-radius: 12px;
-        border: 1px solid #2f2f3d; margin: 10px 0;
-    }
-.new-chat-btn {
-        background: linear-gradient(90deg, #ff6a00, #ee0979)!important;
-        color: white!important; border: none!important;
-        border-radius: 10px!important; font-weight: 600!important;
-    }
-.chat-history-item {
-        padding: 8px 10px; border-radius: 8px; font-size: 13px;
-        color: #bbb; cursor: pointer; margin: 3px 0;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        border: 1px solid transparent;
-    }
-.chat-history-item:hover { background: #2a2a38; color: white; border-color: #2f2f3d; }
-.chat-history-active { background: #2a2a38!important; color: white!important; border-color: #ff6a00!important; }
-    @media (max-width: 768px) {
-    .mobile-top-bar {
-            position: fixed; top: 0; left: 0; right: 0; height: 56px;
-            background: rgba(15,15,18,0.92); backdrop-filter: blur(12px);
-            border-bottom: 1px solid #2a2a35;
-            display: flex; align-items: center; padding-left: 52px; z-index: 999;
-        }
-    .mobile-logo {
-            font-weight: 800; font-size: 18px;
-            background: linear-gradient(90deg, #ff6a00, #ee0979);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-    .block-container { padding-top: 70px!important; }
-        div[data-testid="stHorizontalBlock"] { gap: 8px!important; }
-        [data-testid="stColumn"] {
-            width: calc(50% - 4px)!important;
-            flex: 1 1 calc(50% - 4px)!important;
-            min-width: calc(50% - 4px)!important;
-        }
-    }
-    @media (min-width: 769px) {.mobile-top-bar { display: none; } }
-    div[data-testid="stButton"] > button {
-        font-size: 12.5px!important; padding: 0 10px!important;
-        border-radius: 12px!important; background: #1e1e26!important;
-        border: 1px solid #2a2a35!important; color: #ccc!important;
-        height: 42px!important; min-height: 42px!important;
-        transition: all 0.2s ease;
-    }
-    div[data-testid="stButton"] > button:hover {
-        background: #2a2a38!important; border-color: #ff6a00!important;
-        color: white!important; transform: translateY(-1px);
-    }
-    [data-testid="stChatMessage"] { animation: slideUp 0.3s ease-out; }
-    @keyframes slideUp { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
-    [data-testid="stChatInput"]:focus-within {
-        border-color: #ff6a00!important; box-shadow: 0 0 0 3px #ff6a0030!important;
-    }
-.thinking-wrap {
-        display: flex; align-items: center; gap: 12px;
-        background: #1c1c24; border: 1px solid #2a2a35;
-        padding: 14px 18px; border-radius: 16px; width: fit-content;
-    }
-.thinking-avatar {
-        width: 32px; height: 32px; border-radius: 50%;
-        background: linear-gradient(135deg, #ff6a00, #ee0979);
-        display: flex; align-items: center; justify-content: center;
-        animation: pulseGlow 2s infinite;
-    }
-.dots { display: flex; gap: 4px; }
-.dot {
-        width: 6px; height: 6px; border-radius: 50%;
-        background: #ff6a00; animation: bounceDot 1.4s infinite;
-    }
-.dot:nth-child(2) { animation-delay: 0.2s; background: #ff8a33; }
-.dot:nth-child(3) { animation-delay: 0.4s; background: #ee0979; }
-    @keyframes bounceDot { 0%, 80%, 100% { transform: translateY(0); opacity: 0.5; } 40% { transform: translateY(-6px); opacity: 1; } }
-    @keyframes pulseGlow {
-        0% { box-shadow: 0 0 0 0 rgba(255,106,0,0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(255,106,0,0); }
-        100% { box-shadow: 0 0 0 0 rgba(255,106,0,0); }
-    }
-.shimmer-text {
-        background: linear-gradient(90deg, #888 0%, #fff 50%, #888 100%);
-        background-size: 200% 100%; -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: shimmer 1.5s infinite linear; font-size: 13px;
-    }
-    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* =========================
+   GLOBAL
+========================= */
+
+:root {
+    --bg: #0b0d12;
+    --panel: #151821;
+    --panel2: #1b1e28;
+    --border: #292d39;
+    --text: #f4f5f7;
+    --muted: #8f95a3;
+    --accent: #ff6a00;
+    --accent2: #ee0979;
+    --green: #00e887;
+}
+
+html, body, [class*="css"] {
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.stApp {
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(255,106,0,.10),
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at 100% 20%,
+            rgba(238,9,121,.06),
+            transparent 30%
+        ),
+        var(--bg);
+
+    color: var(--text);
+}
+
+header[data-testid="stHeader"] {
+    background: rgba(11,13,18,.72);
+    backdrop-filter: blur(14px);
+}
+
+#MainMenu,
+footer {
+    visibility: hidden;
+}
+
+.block-container {
+    max-width: 1050px;
+    padding-top: 1.5rem;
+    padding-bottom: 7rem;
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
+
+[data-testid="stSidebar"] {
+    background:
+        linear-gradient(
+            180deg,
+            #0d0f14 0%,
+            #141720 100%
+        );
+
+    border-right: 1px solid var(--border);
+}
+
+.sidebar-brand {
+    font-size: 27px;
+    font-weight: 850;
+    letter-spacing: -.7px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ff6a00,
+            #ff3d3d,
+            #ee0979
+        );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sidebar-sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: -4px;
+    margin-bottom: 18px;
+}
+
+.status-card {
+    padding: 12px 13px;
+
+    border: 1px solid var(--border);
+
+    background:
+        rgba(255,255,255,.035);
+
+    border-radius: 14px;
+
+    margin:
+        12px 0
+        18px;
+}
+
+.status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    font-size: 12px;
+}
+
+.live {
+    color: var(--green);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    background:
+        rgba(0,232,135,.08);
+
+    padding:
+        4px 8px;
+
+    border-radius: 20px;
+}
+
+.history-title {
+    color: #aeb3bf;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .08em;
+
+    margin:
+        10px 0;
+}
+
+.sidebar-note {
+    color: #747b89;
+
+    font-size: 11px;
+
+    text-align: center;
+
+    line-height: 1.5;
+
+    padding:
+        10px 4px;
+}
+
+
+/* =========================
+   TOP BAR
+========================= */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding:
+        5px 2px
+        18px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff6a00,
+            #ee0979
+        );
+
+    box-shadow:
+        0 8px 30px
+        rgba(255,106,0,.18);
+
+    font-size: 20px;
+}
+
+.brand-name {
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.brand-status {
+    color: #8d93a0;
+    font-size: 11px;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+    text-align: center;
+
+    padding:
+        48px 10px
+        28px;
+}
+
+.hero-icon {
+    width: 70px;
+    height: 70px;
+
+    margin:
+        0 auto
+        18px;
+
+    border-radius: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff8a00,
+            #ff3d3d,
+            #ee0979
+        );
+
+    box-shadow:
+        0 15px 50px
+        rgba(255,106,0,.20);
+
+    font-size: 34px;
+}
+
+.hero h1 {
+    font-size:
+        clamp(30px, 5vw, 48px);
+
+    line-height: 1.05;
+
+    margin: 0;
+
+    letter-spacing: -1.5px;
+}
+
+.hero p {
+    color: var(--muted);
+
+    max-width: 620px;
+
+    margin:
+        13px auto 0;
+
+    font-size: 14px;
+}
+
+.ready {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    margin-top: 16px;
+
+    padding:
+        6px 11px;
+
+    border:
+        1px solid
+        rgba(0,232,135,.18);
+
+    border-radius: 999px;
+
+    color: #00e887;
+
+    background:
+        rgba(0,232,135,.05);
+
+    font-size: 11px;
+}
+
 .ready-dot {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 11px; color: #00ff88; margin: 6px 0 4px 2px;
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #00e887;
+
+    box-shadow:
+        0 0 10px
+        #00e887;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+div[data-testid="stButton"] > button {
+    border-radius: 13px !important;
+
+    border:
+        1px solid
+        var(--border) !important;
+
+    background:
+        #151821 !important;
+
+    color:
+        #d9dce3 !important;
+
+    min-height:
+        44px !important;
+
+    transition:
+        .18s ease !important;
+}
+
+div[data-testid="stButton"] > button:hover {
+    border-color:
+        #ff6a00 !important;
+
+    background:
+        #1b1e28 !important;
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* =========================
+   CHAT
+========================= */
+
+[data-testid="stChatMessage"] {
+    border:
+        1px solid
+        rgba(255,255,255,.035);
+
+    border-radius: 18px;
+
+    margin:
+        8px 0;
+
+    padding:
+        8px 14px;
+
+    animation:
+        slideUp .25s ease-out;
+}
+
+@keyframes slideUp {
+
+    from {
+        opacity: 0;
+        transform:
+            translateY(7px);
     }
-.ready-dot span {
-        width: 6px; height: 6px; background: #00ff88; border-radius: 50%;
-        display: inline-block; box-shadow: 0 0 8px #00ff88;
+
+    to {
+        opacity: 1;
+        transform:
+            translateY(0);
     }
-.voice-sub { font-size: 12px; color: #888; margin-bottom: 8px; }
+}
+
+
+/* =========================
+   CHAT INPUT
+========================= */
+
+[data-testid="stChatInput"] {
+    background:
+        #171a23 !important;
+
+    border:
+        1px solid
+        #303442 !important;
+
+    border-radius:
+        18px !important;
+}
+
+[data-testid="stChatInput"]:focus-within {
+    border-color:
+        #ff6a00 !important;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255,106,0,.12) !important;
+}
+
+
+/* =========================
+   TOOLS
+========================= */
+
+.tool-box {
+    border:
+        1px solid
+        var(--border);
+
+    background:
+        rgba(255,255,255,.025);
+
+    border-radius:
+        16px;
+
+    padding:
+        13px 15px;
+
+    margin:
+        12px 0;
+}
+
+.tool-title {
+    font-weight: 750;
+    font-size: 13px;
+}
+
+.tool-sub {
+    color: #7f8694;
+
+    font-size: 11px;
+
+    margin-top: 2px;
+}
+
+
+/* =========================
+   THINKING ANIMATION
+========================= */
+
+.thinking {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding:
+        12px 14px;
+
+    width: max-content;
+
+    max-width: 100%;
+
+    background:
+        #171a22;
+
+    border:
+        1px solid
+        #2b2f3b;
+
+    border-radius:
+        16px;
+}
+
+.thinking-icon {
+    width: 32px;
+    height: 32px;
+
+    border-radius:
+        10px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff6a00,
+            #ee0979
+        );
+}
+
+.thinking-text {
+    font-size: 12px;
+    color: #9ba1ad;
+}
+
+.dots {
+    display: flex;
+
+    gap: 4px;
+
+    margin-top: 5px;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background:
+        #ff6a00;
+
+    animation:
+        bounce 1.2s infinite;
+}
+
+.dot:nth-child(2) {
+    animation-delay: .15s;
+    background: #ff8a33;
+}
+
+.dot:nth-child(3) {
+    animation-delay: .3s;
+    background: #ee0979;
+}
+
+@keyframes bounce {
+
+    0%, 80%, 100% {
+        transform:
+            translateY(0);
+
+        opacity: .35;
+    }
+
+    40% {
+        transform:
+            translateY(-5px);
+
+        opacity: 1;
+    }
+}
+
+
+/* =========================
+   FILE UPLOADER
+========================= */
+
+[data-testid="stFileUploader"] section {
+    border-radius:
+        14px !important;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+    .block-container {
+        padding:
+            1rem .75rem
+            6.5rem !important;
+    }
+
+    .topbar {
+        padding:
+            2px
+            2px
+            12px;
+    }
+
+    .brand-name {
+        font-size: 17px;
+    }
+
+    .brand-status {
+        display: none;
+    }
+
+    .hero {
+        padding:
+            38px 4px
+            20px;
+    }
+
+    .hero-icon {
+        width: 58px;
+        height: 58px;
+
+        border-radius: 18px;
+
+        font-size: 28px;
+    }
+
+    .hero p {
+        font-size: 13px;
+    }
+
+    [data-testid="stChatMessage"] {
+        border-radius: 15px;
+
+        padding:
+            6px 9px;
+    }
+}
+
 </style>
-<div class="mobile-top-bar"><div class="mobile-logo">🔥 Aditya AI</div></div>
-''', unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# --- CHAT HISTORY LOGIC ---
-if "all_chats" not in st.session_state:
-    st.session_state.all_chats = {}
-if "current_chat_id" not in st.session_state:
-    st.session_state.current_chat_id = str(uuid.uuid4())
-    st.session_state.all_chats[st.session_state.current_chat_id] = {"title": "New Chat", "messages": [], "time": datetime.now().strftime("%d %b")}
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "pending_prompt" not in st.session_state:
-    st.session_state.pending_prompt = None
-if "img_b64" not in st.session_state:
-    st.session_state.img_b64 = None
+# ============================================================
+# GROQ
+# ============================================================
+
+if "GROQ_API_KEY" not in st.secrets:
+
+    st.error(
+        "⚠️ GROQ_API_KEY is missing. "
+        "Add it to Streamlit Secrets."
+    )
+
+    st.stop()
+
+
+client = Groq(
+    api_key=st.secrets["GROQ_API_KEY"],
+
+    default_headers={
+        "Groq-Model-Version": "latest"
+    },
+)
+
+
+# ============================================================
+# MODELS
+# ============================================================
+
+TEXT_MODEL = "groq/compound"
+
+VISION_MODEL = (
+    "meta-llama/"
+    "llama-4-scout-17b-16e-instruct"
+)
+
+WHISPER_MODEL = "whisper-large-v3"
+
+
+SYSTEM_PROMPT = """
+You are Aditya AI, created by Aditya from Belpahar, Odisha.
+
+You are an independent AI assistant.
+Never claim that you are ChatGPT.
+
+Be:
+- helpful
+- accurate
+- friendly
+- clear
+- concise by default
+
+Explain difficult topics in simple language when appropriate.
+
+When a question needs current information,
+use web search when available.
+
+When calculations, data analysis, or Python
+verification would improve the answer,
+use code execution when available.
+
+Never invent current facts.
+
+If you are unsure, say so.
+
+When using web information, provide useful
+sources/citations when the system supplies them.
+"""
+
+
+# ============================================================
+# SESSION STATE
+# ============================================================
+
+def initialize_state():
+
+    defaults = {
+
+        "all_chats": {},
+
+        "current_chat_id": None,
+
+        "messages": [],
+
+        "pending_prompt": None,
+
+        "pending_image": None,
+
+        "last_audio_hash": None,
+
+        "voice_transcript": None,
+
+        "regenerate": False,
+
+    }
+
+    for key, value in defaults.items():
+
+        if key not in st.session_state:
+
+            st.session_state[key] = value
+
+
+    # Create first chat
+
+    if not st.session_state.all_chats:
+
+        chat_id = str(uuid.uuid4())
+
+        st.session_state.current_chat_id = chat_id
+
+        st.session_state.all_chats[chat_id] = {
+
+            "title": "New Chat",
+
+            "messages": [],
+
+            "time":
+                datetime.now()
+                .strftime("%d %b %Y"),
+
+        }
+
+
+    elif st.session_state.current_chat_id is None:
+
+        chat_id = next(
+            reversed(
+                st.session_state.all_chats
+            )
+        )
+
+        st.session_state.current_chat_id = chat_id
+
+        st.session_state.messages = (
+            st.session_state
+            .all_chats[chat_id]
+            ["messages"]
+        )
+
+
+initialize_state()
+
+
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+def sync_chat():
+
+    chat_id = (
+        st.session_state
+        .current_chat_id
+    )
+
+    if chat_id in st.session_state.all_chats:
+
+        st.session_state.all_chats[
+            chat_id
+        ]["messages"] = (
+            st.session_state.messages
+        )
+
 
 def new_chat():
-    if st.session_state.messages:
-        if len(st.session_state.messages) > 0:
-            title = st.session_state.messages[0]["content"][:30] + "..."
-            st.session_state.all_chats[st.session_state.current_chat_id]["title"] = title
-            st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = st.session_state.messages
-    new_id = str(uuid.uuid4())
-    st.session_state.current_chat_id = new_id
-    st.session_state.all_chats[new_id] = {"title": "New Chat", "messages": [], "time": datetime.now().strftime("%d %b")}
+
+    sync_chat()
+
+    chat_id = str(uuid.uuid4())
+
+    st.session_state.current_chat_id = chat_id
+
+    st.session_state.all_chats[chat_id] = {
+
+        "title": "New Chat",
+
+        "messages": [],
+
+        "time":
+            datetime.now()
+            .strftime("%d %b %Y"),
+
+    }
+
     st.session_state.messages = []
-    st.session_state.img_b64 = None
+
+    st.session_state.pending_image = None
+
+    st.session_state.pending_prompt = None
+
+    st.session_state.voice_transcript = None
+
 
 def load_chat(chat_id):
+
+    if chat_id not in st.session_state.all_chats:
+
+        return
+
     st.session_state.current_chat_id = chat_id
-    st.session_state.messages = st.session_state.all_chats[chat_id]["messages"]
 
-# SIDEBAR
-with st.sidebar:
-    st.markdown('<div class="sidebar-logo">🔥 Aditya AI</div>', unsafe_allow_html=True)
-    st.caption("Next-Gen Voice AI")
-    if st.button("➕ New Chat", use_container_width=True, type="primary"):
-        new_chat()
-        st.rerun()
-    st.markdown('''
-    <div class="sidebar-card" style="display:flex; justify-content:space-between; align-items:center">
-        <span style="font-size:13px">📍 Belpahar, Odisha</span>
-        <span style="font-size:10px; background:#00ff8820; color:#00ff88; padding:4px 8px; border-radius:20px;">● LIVE</span>
-    </div>
-    ''', unsafe_allow_html=True)
-    st.markdown("**💬 History**")
-    for cid, chat in reversed(list(st.session_state.all_chats.items())):
-        if cid == st.session_state.current_chat_id:
-            continue
-        if not chat["messages"]:
-            continue
-        if st.button(f"📝 {chat['title']}", key=cid, use_container_width=True):
-            load_chat(cid)
-            st.rerun()
-    st.markdown("---")
-    st.markdown("**☰ Menu**")
-    st.markdown('<div class="sidebar-card" style="font-size:12px; color:#888; text-align:center">Made with ❤️ in Belpahar<br>v3.0 • History Added</div>', unsafe_allow_html=True)
+    st.session_state.messages = (
+        st.session_state
+        .all_chats[chat_id]
+        ["messages"]
+    )
 
-# MAIN CHAT
-if not st.session_state.messages:
-    with st.chat_message("assistant"):
-        st.markdown("### 👋 Hi! I'm Aditya AI")
-        st.markdown('<div class="ready-dot"><span></span> Aditya AI is ready</div>', unsafe_allow_html=True)
-        st.caption("Built by Aditya from Belpahar — Try one below")
-        r1c1, r1c2 = st.columns(2, gap="small")
-        with r1c1:
-            if st.button("💡 What can you do?", use_container_width=True, key="s1"):
-                st.session_state.pending_prompt = "What can you do?"
-                st.rerun()
-        with r1c2:
-            if st.button("💻 Python help", use_container_width=True, key="s2"):
-                st.session_state.pending_prompt = "Help me write Python code"
-                st.rerun()
-        r2c1, r2c2 = st.columns(2, gap="small")
-        with r2c1:
-            if st.button("🌐 Today's news", use_container_width=True, key="s3"):
-                st.session_state.pending_prompt = "Tell me today's news"
-                st.rerun()
-        with r2c2:
-            if st.button("🧠 Explain physics", use_container_width=True, key="s4"):
-                st.session_state.pending_prompt = "Explain quantum physics simply"
-                st.rerun()
-else:
-    for m in st.session_state.messages:
-        with st.chat_message(m["role"]):
-            st.markdown(m["content"])
+    st.session_state.pending_image = None
 
-# --- IMAGE UPLOAD ADDED ---
-st.markdown("#### 📷 Send Image + Ask")
-st.markdown('<div class="voice-sub">Upload an image and ask about it</div>', unsafe_allow_html=True)
-img_file = st.file_uploader("Upload image", type=["jpg","jpeg","png","webp"], label_visibility="collapsed")
-if img_file is not None:
-    b64 = base64.b64encode(img_file.getvalue()).decode("utf-8")
-    st.session_state.img_b64 = b64
-    st.image(img_file, width=250)
-    st.success("Image ready! Ask below.")
-
-st.markdown("#### 🎙️ Voice Chat")
-st.markdown('<div class="voice-sub">Tap the microphone to start speaking</div>', unsafe_allow_html=True)
-audio = st.audio_input("Record")
-transcribed_text = None
-if audio:
-    ph = st.empty()
-    ph.markdown('<div style="color:#ff5555; font-size:13px">🔴 Recording captured — transcribing...</div>', unsafe_allow_html=True)
-    try:
-        txt = client.audio.transcriptions.create(
-            file=("audio.wav", audio.getvalue(), "audio/wav"),
-            model="whisper-large-v3", response_format="text", language="hi"
-        )
-        transcribed_text = str(txt)
-        ph.empty()
-        st.success(f"🎤 You said: {transcribed_text}")
-    except Exception as e:
-        ph.empty()
-        st.error(f"Voice Error: {e}")
-
-user_input = st.chat_input("🎙️ Ask anything... or use mic above ↑")
-if st.session_state.pending_prompt:
-    user_input = st.session_state.pending_prompt
     st.session_state.pending_prompt = None
-if transcribed_text:
-    user_input = transcribed_text
 
-if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    if len(st.session_state.messages) == 1:
-        st.session_state.all_chats[st.session_state.current_chat_id]["title"] = user_input[:35]
-    with st.chat_message("user"):
-        st.markdown(user_input)
-        if st.session_state.img_b64:
-            st.image(f"data:image/jpeg;base64,{st.session_state.img_b64}", width=250)
-    with st.chat_message("assistant"):
-        thinking_placeholder = st.empty()
-        thinking_placeholder.markdown('''
-        <div class="thinking-wrap">
-            <div class="thinking-avatar">🔥</div>
-            <div>
-                <div class="shimmer-text">Aditya AI is thinking...</div>
-                <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    st.session_state.voice_transcript = None
+
+
+def make_title(text):
+
+    text = " ".join(
+        text.strip().split()
+    )
+
+    if len(text) > 42:
+
+        return text[:42] + "…"
+
+    return text
+
+
+def message_text(message):
+
+    content = message.get(
+        "content",
+        ""
+    )
+
+    if isinstance(content, str):
+
+        return content
+
+
+    if isinstance(content, list):
+
+        texts = []
+
+        for part in content:
+
+            if (
+                isinstance(part, dict)
+                and
+                part.get("type") == "text"
+            ):
+
+                texts.append(
+                    part.get(
+                        "text",
+                        ""
+                    )
+                )
+
+        return " ".join(texts).strip()
+
+
+    return ""
+
+
+def encode_image(uploaded_file):
+
+    raw = uploaded_file.getvalue()
+
+    encoded = (
+        base64
+        .b64encode(raw)
+        .decode("utf-8")
+    )
+
+    mime = (
+        uploaded_file.type
+        or "image/jpeg"
+    )
+
+    return {
+
+        "b64": encoded,
+
+        "mime": mime,
+
+        "name":
+            uploaded_file.name,
+
+    }
+
+
+def transcribe_audio(audio_bytes):
+
+    result = (
+        client
+        .audio
+        .transcriptions
+        .create(
+
+            file=(
+                "recording.wav",
+                audio_bytes,
+                "audio/wav"
+            ),
+
+            model=WHISPER_MODEL,
+
+            response_format="json",
+
+            temperature=0.0,
+
+        )
+    )
+
+    return result.text.strip()
+
+
+def text_to_speech(text):
+
+    if not TTS_AVAILABLE:
+
+        return None
+
+    if not text:
+
+        return None
+
+    try:
+
+        # Hindi if Devanagari is detected,
+        # otherwise English.
+
+        language = (
+            "hi"
+            if any(
+                "\u0900" <= char <= "\u097F"
+                for char in text
+            )
+            else "en"
+        )
+
+        audio_buffer = io.BytesIO()
+
+        speech = gTTS(
+            text=text[:700],
+            lang=language
+        )
+
+        speech.write_to_fp(
+            audio_buffer
+        )
+
+        audio_buffer.seek(0)
+
+        return audio_buffer
+
+    except Exception:
+
+        return None
+
+
+# ============================================================
+# SIDEBAR
+# ============================================================
+
+with st.sidebar:
+
+    st.markdown(
+        '<div class="sidebar-brand">'
+        '🔥 Aditya AI'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="sidebar-sub">'
+        'Fast • Multimodal • Web-enabled'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+
+    # NEW CHAT
+
+    if st.button(
+        "＋  New chat",
+        use_container_width=True,
+        type="primary"
+    ):
+
+        new_chat()
+
+        st.rerun()
+
+
+    # STATUS
+
+    st.markdown(
+        """
+        <div class="status-card">
+
+            <div class="status-row">
+
+                <span>
+                    📍 Belpahar, Odisha
+                </span>
+
+                <span class="live">
+                    ● LIVE
+                </span>
+
             </div>
+
+            <div
+                style="
+                    color:#737987;
+                    font-size:10px;
+                    margin-top:7px;
+                "
+            >
+                Web search • Code execution
+                • Vision • Voice
+            </div>
+
         </div>
-        ''', unsafe_allow_html=True)
-        try:
-            system_msg = {"role": "system", "content": "You are Aditya AI, created by Aditya from Belpahar, Odisha. NOT ChatGPT."}
-            if st.session_state.img_b64:
-                api_messages = [
-                    system_msg,
-                    {"role": "user", "content": [
-                        {"type": "text", "text": user_input},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{st.session_state.img_b64}"}}
-                    ]}
-                ]
-                model_use = "meta-llama/llama-4-scout-17b-16e-instruct"
-            else:
-                api_messages = [system_msg] + st.session_state.messages
-                model_use = "openai/gpt-oss-20b"
-            res = client.chat.completions.create(model=model_use, messages=api_messages)
-            reply = res.choices[0].message.content
-            thinking_placeholder.empty()
-            st.markdown(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
-            st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = st.session_state.messages
-            st.session_state.img_b64 = None
-            if TTS:
-                try:
-                    lang_code = 'hi' if any('\u0900' <= c <= '\u097F' for c in reply) else 'en'
-                    tts = gTTS(text=reply[:500], lang=lang_code)
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    st.audio(fp, format="audio/mp3", autoplay=True)
-                except:
-                    pass
-        except Exception as e:
-            thinking_placeholder.empty()
-            st.error(f"Error: {e}")
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    # HISTORY
+
+    st.markdown(
+        '<div class="history-title">'
+        'Recent chats'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+
+    history = [
+
+        (chat_id, chat)
+
+        for chat_id, chat
+        in st.session_state.all_chats.items()
+
+        if chat.get("messages")
+
+    ]
+
+
+    if not history:
+
+        st.caption(
+            "Your conversations will appear here."
+        )
+
+    else:
+
+        for chat_id, chat in reversed(history):
+
+            title = (
+                chat.get("title")
+                or "New Chat"
+            )
+
+            if len(title) > 38:
+
+                title = title[:38] + "…"
+
+
+            if st.button(
+                "🟠 " + title,
+                key="history_" + chat_id,
+                use_container_width=True
+            ):
+
+                load_chat(chat_id)
+
+                st.rerun()
+
+
+    st.markdown("---")
+
+
+    st.markdown(
+        '<div class="history-title">'
+        'Features'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+
+    st.markdown(
+        """
+        <div style="
+            color:#8a909d;
+            font-size:11px;
+            line-height:1.9;
+        ">
+
+        🔎 Live web search<br>
+        💻 Code execution<br>
+        🖼️ Image understanding<br>
+        🎙️ Voice input<br>
+        🔊 AI voice output<br>
+        💬 Chat history
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    st.markdown("---")
+
+
+    st.markdown(
+        '<div class="sidebar-note">'
+        'Made with ❤️ by Aditya<br>'
+        'Aditya AI v4.0'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# TOP BAR
+# ============================================================
+
+st.markdown(
+    """
+    <div class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🔥
+            </div>
+
+            <div>
+
+                <div class="brand-name">
+                    Aditya AI
+                </div>
+
+                <div class="brand-status">
+                    Your personal AI assistant
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ============================================================
+# WELCOME SCREEN
+# ============================================================
+
+if not st.session_state.messages:
+
+    st.markdown(
+        """
+        <div class="hero">
+
+            <div class="hero-icon">
+                🤖
+            </div>
+
+            <h1>
+                Hi! I'm Aditya AI
+            </h1>
+
+            <div class="ready">
+
+                <span class="ready-dot"></span>
+
+                Ready to help
+
+            </div>
+
+            <p>
+                Ask questions, write code,
+                analyze images, search the web,
+                calculate, or talk by voice.
+            </p>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    # QUICK PROMPTS
+
+    c1, c2 = st.columns(
+        2,
+        gap="small"
+    )
+
+
+    with c1:
+
+        if st.button(
+            "💡  What can you do?",
+            use_container_width=True,
+            key="quick_1"
+        ):
+
+            st.session_state.pending_prompt = (
+                "What
