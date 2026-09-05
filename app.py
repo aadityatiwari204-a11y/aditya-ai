@@ -179,17 +179,7 @@ if final_input and final_input.strip()!= "":
 
    st.session_state.messages.append({"role":"assistant","content":full_answer})
 
-# --- Voice Hindi + English ---
-try:
-    lang_code = 'hi' if any("\u0900" <= c <= "\u097F" for c in full_answer) else 'en'
-    tts = gTTS(text=full_answer[:500], lang=lang_code)
-    buf = io.BytesIO()
-    tts.write_to_fp(buf)
-    buf.seek(0)
-    st.session_state['last_voice'] = buf  # save for after rerun
-    st.session_state['last_voice_lang'] = lang_code
-except:
-    pass
+
 
 st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = list(st.session_state.messages)
 st.session_state.all_chats[st.session_state.current_chat_id]["title"] = final_input[:35]
