@@ -163,24 +163,33 @@ if final_input and final_input.strip()!= "":
             )
             full_answer = res.choices[0].message.content
             ph.markdown(full_answer)
-        except Exception as e:
-            # Fallback to 8b if 70b fails
-            try:
-                res = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=msgs,
-                    max_tokens=2000
-                )
-                full_answer = res.choices[0].message.content
-                ph.markdown(full_answer)
-            except Exception as e2:
-                full_answer = f"Server busy, try again in 10 sec. Error: {e2}"
-                ph.markdown(full_answer)
+            except Exception as e:
+        # Fallback to 8b if 70b fails
+        try:
+            res = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=msgs,
+                max_tokens=2000
+            )
+            full_answer = res.choices[0].message.content
+            ph.markdown(full_answer)
+        except Exception as e2:
+            full_answer = f"Server busy, try again in 10 sec. Error: {e2}"
+            ph.markdown(full_answer)
 
-   st.session_state.messages.append({"role":"assistant","content":full_answer})
+        st.session_state.messages.append({"role": "assistant", "content": full_answer})
 
+        try:
+            lang_code = 'hi' if any('\u0900' <= c <= '\u097F' for c in full_answer) else 'en'
+            tts = gTTS(text=full_answer[:500], lang=lang_code, slow=False)
+            buf = io.BytesIO()
+            tts.write_to_fp(buf)
+            buf.seek(0)
+            st.session_state['last_voice'] = buf
+            st.session_state['last_voice_lang'] = lang_code
+        except:
+            pass
 
-
-st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = list(st.session_state.messages)
-st.session_state.all_chats[st.session_state.current_chat_id]["title"] = final_input[:35]
-st.rerun()
+        st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = list(st.session_state.messages)
+        st.session_state.all_chats[st.session_state.current_chat_id]["title"] = final_input[:35]
+        st.rerun()
