@@ -148,11 +148,13 @@ if "img_b64" not in st.session_state:
     st.session_state.img_b64 = None
 
 def new_chat():
+    # Save current chat if not empty
     if st.session_state.messages:
         if len(st.session_state.messages) > 0:
             title = st.session_state.messages[0]["content"][:30] + "..."
             st.session_state.all_chats[st.session_state.current_chat_id]["title"] = title
             st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = st.session_state.messages
+    # Create new
     new_id = str(uuid.uuid4())
     st.session_state.current_chat_id = new_id
     st.session_state.all_chats[new_id] = {"title": "New Chat", "messages": [], "time": datetime.now().strftime("%d %b")}
@@ -165,4 +167,14 @@ def load_chat(chat_id):
 
 # SIDEBAR
 with st.sidebar:
-    st.markdown('<div class="sidebar-logo">
+    st.markdown('<div class="sidebar-logo">🔥 Aditya AI</div>', unsafe_allow_html=True)
+    st.caption("Next-Gen Voice AI")
+
+    if st.button("➕ New Chat", use_container_width=True, type="primary"):
+        new_chat()
+        st.rerun()
+
+    st.markdown("""
+    <div class="sidebar-card" style="display:flex; justify-content:space-between; align-items:center">
+        <span style="font-size:13px">📍 Belpahar, Odisha</span>
+        <span style="font-size:10px; background:#00ff8820; color:#
