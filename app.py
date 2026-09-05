@@ -1,19 +1,22 @@
 import streamlit as st
 from groq import Groq
-import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Aditya AI", page_icon="🔥")
-st.sidebar.markdown("## 🔥 Aditya AI")
-st.markdown("""
-<h2 style='margin-bottom:0px;'>🔥 Aditya AI</h2>
-<p style='font-size:16px; color:gray; margin-top:2px;'>Built by Aditya from Belpahar</p>
-""", unsafe_allow_html=True)
+# Page config
+st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="centered")
+
+# Sidebar - CLEAN
+st.sidebar.title("🔥 Aditya AI")
+st.sidebar.markdown("Built by Aditya from Belpahar")
+
+# Header
+st.markdown("<p style='font-size:16px; color:gray; margin-top:2px;'>Built by Aditya from Belpahar</p>", unsafe_allow_html=True)
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# --- 3. CHAT AREA WELCOME CARD ---
 if not st.session_state.messages:
     with st.chat_message("assistant"):
         st.markdown("### 👋 Hi! I'm Aditya AI")
@@ -24,22 +27,19 @@ else:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
-# --- OFFICIAL VOICE RECORDER - POLISHED ---
-st.markdown("#### 🎤 Voice Chat (Hindi/English)")
+# --- 4. POLISHED VOICE CHAT ---
+st.markdown("#### 🎙️ Voice Chat (Hindi/English)")
 voice_status = st.empty()
 voice_status.markdown("🎙️ **Tap to speak** - Click mic to start")
 
 audio = st.audio_input("🔴 Listening... Tap mic to record")
 
 transcribed_text = None
-user_input = None
 
 if audio:
-    voice_status.warning("🔴 **Listening...** - Recording captured!")
-    with st.spinner("🧠 **Thinking...** - Sun raha hu... transcribing..."):
+    voice_status.warning("🔴 Listening... Recording captured!")
+    with st.spinner("🧠 Thinking... Sun raha hu... transcribing..."):
         try:
-        try:
-            # Groq Whisper transcription
             transcription = client.audio.transcriptions.create(
                 file=("audio.wav", audio.getvalue(), "audio/wav"),
                 model="whisper-large-v3",
@@ -48,15 +48,17 @@ if audio:
             )
             transcribed_text = transcription
             st.success(f"You said: {transcribed_text}")
-            user_input = transcribed_text
+            voice_status.empty()
         except Exception as e:
-            st.error(f"Transcription Error: {e}")
+            st.error(f"Error: {e}")
+            voice_status.empty()
 
-# Text input also
-text_input = st.chat_input("Type or speak...")
+# --- CHAT INPUT ---
+user_input = st.chat_input("Ask me anything...")
 
-if text_input:
-    user_input = text_input
+# If voice was transcribed, use it as input
+if transcribed_text:
+    user_input = transcribed_text
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -64,35 +66,18 @@ if user_input:
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        try:
-            res = client.chat.completions.create(
-                model="openai/gpt-oss-20b",
-                messages=[
-                    {"role": "system", "content": "You are Aditya AI built by Aditya from Belpahar, Odisha. Reply in SAME language user uses. If user speaks Hindi, reply in pure Hindi (Devanagari). If English, reply in English. Keep answer short, helpful for Indian students."},
-                    *st.session_state.messages
-                ]
-            )
-            ans = res.choices[0].message.content
-            st.markdown(ans)
-            st.session_state.messages.append({"role": "assistant", "content": ans})
+        with st.spinner("Aditya AI soch raha hai..."):
+            try:
+                response = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=st.session_state.messages
+                )
+                reply = response.choices[0].message.content
+                st.markdown(reply)
+                st.session_state.messages.append({"role": "assistant", "content": reply})
+            except Exception as e:
+                st.error(f"Error: {e}")
 
-            # Auto Speak Reply - FIXED HINDI VOICE
-            safe = ans.replace('"', ' ').replace("'", ' ').replace("\n", " ")[:600]
-            components.html(f"""
-                <script>
-                speechSynthesis.cancel();
-                var u = new SpeechSynthesisUtterance("{safe}");
-                var isHindi = /[\\u0900-\\u097F]/.test("{safe}");
-                u.lang = isHindi? 'hi-IN' : 'en-IN';
-                u.rate=0.95;
-                speechSynthesis.speak(u);
-                </script>
-                <button onclick="var u=new SpeechSynthesisUtterance('{safe}'); var isHindi=/[\\u0900-\\u097F]/.test('{safe}'); u.lang=isHindi?'hi-IN':'en-IN'; u.rate=0.95; speechSynthesis.speak(u);" style="background:#FF4B4B;color:white;border:none;padding:8px 15px;border-radius:20px;cursor:pointer;margin-right:10px;">🔊 Replay Voice</button>
-                <button onclick="speechSynthesis.cancel()" style="background:#333;color:white;border:none;padding:8px 15px;border-radius:20px;cursor:pointer;">⏹️ Stop</button>
-            """, height=60)
-
-        except Exception as e:
-            st.error(f"Error: {e} - Check GROQ_API_KEY in Secrets")
-
+# Footer Blog
 st.markdown("---")
-st.link_button("🔗 Visit Blog - aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com")
+st.markdown("[📝 Visit Blog : aditya-ai-belpahar.blogspot.com](https://aditya-ai-belpahar.blogspot.com)")
