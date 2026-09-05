@@ -1,7 +1,6 @@
 import streamlit as st
 from groq import Groq
 import io
-import uuid
 import base64
 import hashlib
 from datetime import datetime
@@ -9,14 +8,14 @@ from datetime import datetime
 # Optional text-to-speech
 try:
     from gtts import gTTS
-    TTS_AVAILABLE = True
-except Exception:
-    TTS_AVAILABLE = False
+    GTTS_AVAILABLE = True
+except ImportError:
+    GTTS_AVAILABLE = False
 
 
-# ============================================================
+# =========================================================
 # PAGE CONFIG
-# ============================================================
+# =========================================================
 
 st.set_page_config(
     page_title="Aditya AI",
@@ -26,1257 +25,895 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# PREMIUM UI
-# ============================================================
-
-st.markdown("""
-<style>
-
-/* =========================
-   GLOBAL
-========================= */
-
-:root {
-    --bg: #0b0d12;
-    --panel: #151821;
-    --panel2: #1b1e28;
-    --border: #292d39;
-    --text: #f4f5f7;
-    --muted: #8f95a3;
-    --accent: #ff6a00;
-    --accent2: #ee0979;
-    --green: #00e887;
-}
-
-html, body, [class*="css"] {
-    font-family:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-}
-
-.stApp {
-    background:
-        radial-gradient(
-            circle at 50% -10%,
-            rgba(255,106,0,.10),
-            transparent 34%
-        ),
-        radial-gradient(
-            circle at 100% 20%,
-            rgba(238,9,121,.06),
-            transparent 30%
-        ),
-        var(--bg);
-
-    color: var(--text);
-}
-
-header[data-testid="stHeader"] {
-    background: rgba(11,13,18,.72);
-    backdrop-filter: blur(14px);
-}
-
-#MainMenu,
-footer {
-    visibility: hidden;
-}
-
-.block-container {
-    max-width: 1050px;
-    padding-top: 1.5rem;
-    padding-bottom: 7rem;
-}
-
-
-/* =========================
-   SIDEBAR
-========================= */
-
-[data-testid="stSidebar"] {
-    background:
-        linear-gradient(
-            180deg,
-            #0d0f14 0%,
-            #141720 100%
-        );
-
-    border-right: 1px solid var(--border);
-}
-
-.sidebar-brand {
-    font-size: 27px;
-    font-weight: 850;
-    letter-spacing: -.7px;
-
-    background:
-        linear-gradient(
-            90deg,
-            #ff6a00,
-            #ff3d3d,
-            #ee0979
-        );
-
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.sidebar-sub {
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: -4px;
-    margin-bottom: 18px;
-}
-
-.status-card {
-    padding: 12px 13px;
-
-    border: 1px solid var(--border);
-
-    background:
-        rgba(255,255,255,.035);
-
-    border-radius: 14px;
-
-    margin:
-        12px 0
-        18px;
-}
-
-.status-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-
-    font-size: 12px;
-}
-
-.live {
-    color: var(--green);
-
-    font-size: 10px;
-    font-weight: 700;
-
-    background:
-        rgba(0,232,135,.08);
-
-    padding:
-        4px 8px;
-
-    border-radius: 20px;
-}
-
-.history-title {
-    color: #aeb3bf;
-
-    font-size: 11px;
-    font-weight: 700;
-
-    text-transform: uppercase;
-
-    letter-spacing: .08em;
-
-    margin:
-        10px 0;
-}
-
-.sidebar-note {
-    color: #747b89;
-
-    font-size: 11px;
-
-    text-align: center;
-
-    line-height: 1.5;
-
-    padding:
-        10px 4px;
-}
-
-
-/* =========================
-   TOP BAR
-========================= */
-
-.topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding:
-        5px 2px
-        18px;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-}
-
-.brand-icon {
-    width: 38px;
-    height: 38px;
-
-    border-radius: 12px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ff6a00,
-            #ee0979
-        );
-
-    box-shadow:
-        0 8px 30px
-        rgba(255,106,0,.18);
-
-    font-size: 20px;
-}
-
-.brand-name {
-    font-size: 19px;
-    font-weight: 800;
-}
-
-.brand-status {
-    color: #8d93a0;
-    font-size: 11px;
-}
-
-
-/* =========================
-   HERO
-========================= */
-
-.hero {
-    text-align: center;
-
-    padding:
-        48px 10px
-        28px;
-}
-
-.hero-icon {
-    width: 70px;
-    height: 70px;
-
-    margin:
-        0 auto
-        18px;
-
-    border-radius: 22px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ff8a00,
-            #ff3d3d,
-            #ee0979
-        );
-
-    box-shadow:
-        0 15px 50px
-        rgba(255,106,0,.20);
-
-    font-size: 34px;
-}
-
-.hero h1 {
-    font-size:
-        clamp(30px, 5vw, 48px);
-
-    line-height: 1.05;
-
-    margin: 0;
-
-    letter-spacing: -1.5px;
-}
-
-.hero p {
-    color: var(--muted);
-
-    max-width: 620px;
-
-    margin:
-        13px auto 0;
-
-    font-size: 14px;
-}
-
-.ready {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 7px;
-
-    margin-top: 16px;
-
-    padding:
-        6px 11px;
-
-    border:
-        1px solid
-        rgba(0,232,135,.18);
-
-    border-radius: 999px;
-
-    color: #00e887;
-
-    background:
-        rgba(0,232,135,.05);
-
-    font-size: 11px;
-}
-
-.ready-dot {
-    width: 6px;
-    height: 6px;
-
-    border-radius: 50%;
-
-    background: #00e887;
-
-    box-shadow:
-        0 0 10px
-        #00e887;
-}
-
-
-/* =========================
-   BUTTONS
-========================= */
-
-div[data-testid="stButton"] > button {
-    border-radius: 13px !important;
-
-    border:
-        1px solid
-        var(--border) !important;
-
-    background:
-        #151821 !important;
-
-    color:
-        #d9dce3 !important;
-
-    min-height:
-        44px !important;
-
-    transition:
-        .18s ease !important;
-}
-
-div[data-testid="stButton"] > button:hover {
-    border-color:
-        #ff6a00 !important;
-
-    background:
-        #1b1e28 !important;
-
-    transform:
-        translateY(-1px);
-}
-
-
-/* =========================
-   CHAT
-========================= */
-
-[data-testid="stChatMessage"] {
-    border:
-        1px solid
-        rgba(255,255,255,.035);
-
-    border-radius: 18px;
-
-    margin:
-        8px 0;
-
-    padding:
-        8px 14px;
-
-    animation:
-        slideUp .25s ease-out;
-}
-
-@keyframes slideUp {
-
-    from {
-        opacity: 0;
-        transform:
-            translateY(7px);
+# =========================================================
+# CONSTANTS
+# =========================================================
+
+TEXT_MODEL = "groq/compound"
+VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+WHISPER_MODEL = "whisper-large-v3"
+
+MAX_IMAGE_SIZE = 4 * 1024 * 1024  # 4 MB
+
+
+# =========================================================
+# CUSTOM CSS
+# =========================================================
+
+st.markdown(
+    """
+    <style>
+
+    /* ---------- GLOBAL ---------- */
+
+    .stApp {
+        background:
+            radial-gradient(
+                circle at 10% 10%,
+                rgba(255, 90, 0, 0.10),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 90% 20%,
+                rgba(255, 0, 120, 0.08),
+                transparent 30%
+            ),
+            #0b0b10;
+        color: #f5f5f7;
     }
-
-    to {
-        opacity: 1;
-        transform:
-            translateY(0);
-    }
-}
-
-
-/* =========================
-   CHAT INPUT
-========================= */
-
-[data-testid="stChatInput"] {
-    background:
-        #171a23 !important;
-
-    border:
-        1px solid
-        #303442 !important;
-
-    border-radius:
-        18px !important;
-}
-
-[data-testid="stChatInput"]:focus-within {
-    border-color:
-        #ff6a00 !important;
-
-    box-shadow:
-        0 0 0 3px
-        rgba(255,106,0,.12) !important;
-}
-
-
-/* =========================
-   TOOLS
-========================= */
-
-.tool-box {
-    border:
-        1px solid
-        var(--border);
-
-    background:
-        rgba(255,255,255,.025);
-
-    border-radius:
-        16px;
-
-    padding:
-        13px 15px;
-
-    margin:
-        12px 0;
-}
-
-.tool-title {
-    font-weight: 750;
-    font-size: 13px;
-}
-
-.tool-sub {
-    color: #7f8694;
-
-    font-size: 11px;
-
-    margin-top: 2px;
-}
-
-
-/* =========================
-   THINKING ANIMATION
-========================= */
-
-.thinking {
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    padding:
-        12px 14px;
-
-    width: max-content;
-
-    max-width: 100%;
-
-    background:
-        #171a22;
-
-    border:
-        1px solid
-        #2b2f3b;
-
-    border-radius:
-        16px;
-}
-
-.thinking-icon {
-    width: 32px;
-    height: 32px;
-
-    border-radius:
-        10px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ff6a00,
-            #ee0979
-        );
-}
-
-.thinking-text {
-    font-size: 12px;
-    color: #9ba1ad;
-}
-
-.dots {
-    display: flex;
-
-    gap: 4px;
-
-    margin-top: 5px;
-}
-
-.dot {
-    width: 6px;
-    height: 6px;
-
-    border-radius: 50%;
-
-    background:
-        #ff6a00;
-
-    animation:
-        bounce 1.2s infinite;
-}
-
-.dot:nth-child(2) {
-    animation-delay: .15s;
-    background: #ff8a33;
-}
-
-.dot:nth-child(3) {
-    animation-delay: .3s;
-    background: #ee0979;
-}
-
-@keyframes bounce {
-
-    0%, 80%, 100% {
-        transform:
-            translateY(0);
-
-        opacity: .35;
-    }
-
-    40% {
-        transform:
-            translateY(-5px);
-
-        opacity: 1;
-    }
-}
-
-
-/* =========================
-   FILE UPLOADER
-========================= */
-
-[data-testid="stFileUploader"] section {
-    border-radius:
-        14px !important;
-}
-
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 768px) {
 
     .block-container {
-        padding:
-            1rem .75rem
-            6.5rem !important;
+        max-width: 1150px;
+        padding-top: 2rem;
+        padding-bottom: 5rem;
     }
 
-    .topbar {
-        padding:
-            2px
-            2px
-            12px;
+    /* ---------- SIDEBAR ---------- */
+
+    section[data-testid="stSidebar"] {
+        background: #101017;
+        border-right: 1px solid rgba(255,255,255,0.08);
     }
 
-    .brand-name {
-        font-size: 17px;
+    section[data-testid="stSidebar"] h1 {
+        font-size: 1.6rem;
     }
 
-    .brand-status {
-        display: none;
+    /* ---------- BUTTONS ---------- */
+
+    .stButton > button {
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.05);
+        color: white;
+        transition: 0.2s ease;
     }
 
-    .hero {
-        padding:
-            38px 4px
-            20px;
+    .stButton > button:hover {
+        border-color: rgba(255,120,30,0.65);
+        background: rgba(255,120,30,0.12);
+        transform: translateY(-1px);
+    }
+
+    /* ---------- CHAT ---------- */
+
+    [data-testid="stChatMessage"] {
+        border-radius: 16px;
+        margin-bottom: 12px;
+    }
+
+    /* ---------- HERO ---------- */
+
+    .hero-card {
+        text-align: center;
+        padding: 50px 20px 30px 20px;
+        margin: 10px auto 20px auto;
+        max-width: 800px;
+        border-radius: 26px;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,0.06),
+                rgba(255,255,255,0.025)
+            );
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
     }
 
     .hero-icon {
-        width: 58px;
-        height: 58px;
-
-        border-radius: 18px;
-
-        font-size: 28px;
+        font-size: 4rem;
+        margin-bottom: 10px;
     }
 
-    .hero p {
-        font-size: 13px;
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 8px;
     }
 
-    [data-testid="stChatMessage"] {
-        border-radius: 15px;
-
-        padding:
-            6px 9px;
+    .hero-subtitle {
+        color: #a9a9b5;
+        font-size: 1rem;
+        line-height: 1.6;
     }
-}
 
-</style>
-""", unsafe_allow_html=True)
+    .ready-pill {
+        display: inline-block;
+        margin: 15px 0;
+        padding: 7px 13px;
+        border-radius: 999px;
+        background: rgba(50, 200, 100, 0.10);
+        border: 1px solid rgba(50, 200, 100, 0.25);
+        color: #8ff0ae;
+        font-size: 0.85rem;
+    }
+
+    /* ---------- INFO CARD ---------- */
+
+    .info-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 15px;
+    }
+
+    /* ---------- SMALL TEXT ---------- */
+
+    .muted {
+        color: #9999a8;
+        font-size: 0.85rem;
+    }
+
+    /* ---------- MOBILE ---------- */
+
+    @media (max-width: 700px) {
+
+        .block-container {
+            padding-left: 0.8rem;
+            padding-right: 0.8rem;
+            padding-top: 1rem;
+        }
+
+        .hero-card {
+            padding: 35px 15px 25px 15px;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-icon {
+            font-size: 3rem;
+        }
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
-# ============================================================
-# GROQ
-# ============================================================
+# =========================================================
+# API CLIENT
+# =========================================================
 
 if "GROQ_API_KEY" not in st.secrets:
-
     st.error(
-        "⚠️ GROQ_API_KEY is missing. "
-        "Add it to Streamlit Secrets."
+        "GROQ_API_KEY is missing. Add it to your Streamlit Secrets."
     )
-
     st.stop()
 
 
-client = Groq(
-    api_key=st.secrets["GROQ_API_KEY"],
-
-    default_headers={
-        "Groq-Model-Version": "latest"
-    },
-)
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 
-# ============================================================
-# MODELS
-# ============================================================
-
-TEXT_MODEL = "groq/compound"
-
-VISION_MODEL = (
-    "meta-llama/"
-    "llama-4-scout-17b-16e-instruct"
-)
-
-WHISPER_MODEL = "whisper-large-v3"
-
-
-SYSTEM_PROMPT = """
-You are Aditya AI, created by Aditya from Belpahar, Odisha.
-
-You are an independent AI assistant.
-Never claim that you are ChatGPT.
-
-Be:
-- helpful
-- accurate
-- friendly
-- clear
-- concise by default
-
-Explain difficult topics in simple language when appropriate.
-
-When a question needs current information,
-use web search when available.
-
-When calculations, data analysis, or Python
-verification would improve the answer,
-use code execution when available.
-
-Never invent current facts.
-
-If you are unsure, say so.
-
-When using web information, provide useful
-sources/citations when the system supplies them.
-"""
-
-
-# ============================================================
+# =========================================================
 # SESSION STATE
-# ============================================================
+# =========================================================
 
-def initialize_state():
+if "all_chats" not in st.session_state:
+    st.session_state.all_chats = {}
 
-    defaults = {
+if "current_chat_id" not in st.session_state:
+    st.session_state.current_chat_id = "chat_1"
 
-        "all_chats": {},
-
-        "current_chat_id": None,
-
-        "messages": [],
-
-        "pending_prompt": None,
-
-        "pending_image": None,
-
-        "last_audio_hash": None,
-
-        "voice_transcript": None,
-
-        "regenerate": False,
-
-    }
-
-    for key, value in defaults.items():
-
-        if key not in st.session_state:
-
-            st.session_state[key] = value
-
-
-    # Create first chat
-
-    if not st.session_state.all_chats:
-
-        chat_id = str(uuid.uuid4())
-
-        st.session_state.current_chat_id = chat_id
-
-        st.session_state.all_chats[chat_id] = {
-
-            "title": "New Chat",
-
-            "messages": [],
-
-            "time":
-                datetime.now()
-                .strftime("%d %b %Y"),
-
-        }
-
-
-    elif st.session_state.current_chat_id is None:
-
-        chat_id = next(
-            reversed(
-                st.session_state.all_chats
-            )
-        )
-
-        st.session_state.current_chat_id = chat_id
-
-        st.session_state.messages = (
-            st.session_state
-            .all_chats[chat_id]
-            ["messages"]
-        )
-
-
-initialize_state()
-
-
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def sync_chat():
-
-    chat_id = (
-        st.session_state
-        .current_chat_id
-    )
-
-    if chat_id in st.session_state.all_chats:
-
-        st.session_state.all_chats[
-            chat_id
-        ]["messages"] = (
-            st.session_state.messages
-        )
-
-
-def new_chat():
-
-    sync_chat()
-
-    chat_id = str(uuid.uuid4())
-
-    st.session_state.current_chat_id = chat_id
-
-    st.session_state.all_chats[chat_id] = {
-
-        "title": "New Chat",
-
-        "messages": [],
-
-        "time":
-            datetime.now()
-            .strftime("%d %b %Y"),
-
-    }
-
+if "messages" not in st.session_state:
     st.session_state.messages = []
 
-    st.session_state.pending_image = None
-
+if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 
-    st.session_state.voice_transcript = None
+if "regenerate" not in st.session_state:
+    st.session_state.regenerate = False
+
+if "last_audio_hash" not in st.session_state:
+    st.session_state.last_audio_hash = None
 
 
-def load_chat(chat_id):
+# =========================================================
+# HELPER FUNCTIONS
+# =========================================================
 
-    if chat_id not in st.session_state.all_chats:
-
-        return
+def new_chat():
+    """Create a new chat."""
+    chat_id = f"chat_{datetime.now().timestamp()}"
 
     st.session_state.current_chat_id = chat_id
-
-    st.session_state.messages = (
-        st.session_state
-        .all_chats[chat_id]
-        ["messages"]
-    )
-
-    st.session_state.pending_image = None
-
+    st.session_state.messages = []
     st.session_state.pending_prompt = None
+    st.session_state.regenerate = False
 
-    st.session_state.voice_transcript = None
-
-
-def make_title(text):
-
-    text = " ".join(
-        text.strip().split()
-    )
-
-    if len(text) > 42:
-
-        return text[:42] + "…"
-
-    return text
+    st.rerun()
 
 
-def message_text(message):
+def sync_chat():
+    """Save current conversation to session history."""
+    chat_id = st.session_state.current_chat_id
 
-    content = message.get(
-        "content",
-        ""
-    )
-
-    if isinstance(content, str):
-
-        return content
-
-
-    if isinstance(content, list):
-
-        texts = []
-
-        for part in content:
-
-            if (
-                isinstance(part, dict)
-                and
-                part.get("type") == "text"
-            ):
-
-                texts.append(
-                    part.get(
-                        "text",
-                        ""
-                    )
-                )
-
-        return " ".join(texts).strip()
-
-
-    return ""
-
-
-def encode_image(uploaded_file):
-
-    raw = uploaded_file.getvalue()
-
-    encoded = (
-        base64
-        .b64encode(raw)
-        .decode("utf-8")
-    )
-
-    mime = (
-        uploaded_file.type
-        or "image/jpeg"
-    )
-
-    return {
-
-        "b64": encoded,
-
-        "mime": mime,
-
-        "name":
-            uploaded_file.name,
-
+    st.session_state.all_chats[chat_id] = {
+        "messages": st.session_state.messages.copy(),
+        "updated": datetime.now().strftime("%d %b %Y, %H:%M"),
     }
 
 
-def transcribe_audio(audio_bytes):
+def get_chat_title(messages):
+    """Generate a simple title from the first user message."""
 
-    result = (
-        client
-        .audio
-        .transcriptions
-        .create(
+    for message in messages:
 
-            file=(
-                "recording.wav",
-                audio_bytes,
-                "audio/wav"
-            ),
+        if message.get("role") == "user":
 
-            model=WHISPER_MODEL,
+            content = message.get("content", "")
 
-            response_format="json",
+            if isinstance(content, str):
+                title = content.strip().replace("\n", " ")
 
-            temperature=0.0,
+                if len(title) > 32:
+                    title = title[:32] + "..."
 
+                return title
+
+            return "Image conversation"
+
+    return "New chat"
+
+
+def image_to_data_url(uploaded_file):
+    """Convert image to a proper data URL."""
+
+    image_bytes = uploaded_file.getvalue()
+
+    if len(image_bytes) > MAX_IMAGE_SIZE:
+        raise ValueError(
+            "Image is larger than 4 MB. "
+            "Please upload a smaller image."
         )
+
+    mime = uploaded_file.type
+
+    if mime not in [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    ]:
+        raise ValueError(
+            "Please upload a JPG, PNG, or WEBP image."
+        )
+
+    encoded = base64.b64encode(image_bytes).decode("utf-8")
+
+    return f"data:{mime};base64,{encoded}"
+
+
+def transcribe_audio(audio_file):
+    """Transcribe uploaded audio using Groq Whisper."""
+
+    audio_bytes = audio_file.getvalue()
+
+    audio_stream = io.BytesIO(audio_bytes)
+    audio_stream.name = audio_file.name or "audio.wav"
+
+    result = client.audio.transcriptions.create(
+        file=audio_stream,
+        model=WHISPER_MODEL,
+        response_format="text",
     )
 
-    return result.text.strip()
+    if isinstance(result, str):
+        return result.strip()
+
+    return str(result).strip()
 
 
 def text_to_speech(text):
+    """Generate speech using gTTS."""
 
-    if not TTS_AVAILABLE:
-
+    if not GTTS_AVAILABLE:
         return None
 
-    if not text:
-
+    if not text.strip():
         return None
 
     try:
 
-        # Hindi if Devanagari is detected,
-        # otherwise English.
-
-        language = (
-            "hi"
-            if any(
-                "\u0900" <= char <= "\u097F"
-                for char in text
-            )
-            else "en"
+        # Detect Hindi/Devanagari
+        has_devanagari = any(
+            "\u0900" <= char <= "\u097F"
+            for char in text
         )
+
+        language = "hi" if has_devanagari else "en"
 
         audio_buffer = io.BytesIO()
 
-        speech = gTTS(
-            text=text[:700],
-            lang=language
+        tts = gTTS(
+            text=text[:3000],
+            lang=language,
+            slow=False,
         )
 
-        speech.write_to_fp(
-            audio_buffer
-        )
-
+        tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
 
-        return audio_buffer
+        return audio_buffer.read()
 
     except Exception:
-
         return None
 
 
-# ============================================================
+def clean_message_for_api(message):
+    """
+    Keep only the parts needed by the model.
+    This prevents UI-only keys from being sent.
+    """
+
+    return {
+        "role": message["role"],
+        "content": message["content"],
+    }
+
+
+def ask_text_model(messages):
+    """Ask Groq Compound."""
+
+    api_messages = [
+        {
+            "role": "system",
+            "content": """
+You are Aditya AI.
+
+You were created by Aditya from Belpahar, Odisha.
+
+You are NOT ChatGPT and should never falsely claim to be ChatGPT.
+
+Be helpful, accurate, friendly, and concise.
+
+You can:
+- answer questions
+- explain concepts
+- help with programming
+- solve calculations
+- brainstorm ideas
+- summarize information
+- help with writing
+- search the web when current information is required
+- use available tools when appropriate
+
+When the user asks for current information, news, recent events,
+prices, current facts, or anything that may have changed, use your
+available web-search capability when appropriate.
+
+When solving mathematical or programming problems, use tools when
+they improve accuracy.
+
+If you do not know something, say so rather than inventing facts.
+""",
+        }
+    ]
+
+    for message in messages:
+        api_messages.append(
+            clean_message_for_api(message)
+        )
+
+    response = client.chat.completions.create(
+        model=TEXT_MODEL,
+        messages=api_messages,
+    )
+
+    return response.choices[0].message.content
+
+
+def ask_vision_model(messages):
+    """Ask the Groq vision model."""
+
+    api_messages = [
+        {
+            "role": "system",
+            "content": """
+You are Aditya AI, a helpful multimodal AI assistant.
+
+You can understand images and answer questions about them.
+
+Describe only what is useful and relevant.
+
+If something in an image is unclear, say that it is unclear
+instead of guessing.
+
+You are NOT ChatGPT.
+""",
+        }
+    ]
+
+    for message in messages:
+
+        content = message["content"]
+
+        if isinstance(content, list):
+            api_messages.append(
+                {
+                    "role": message["role"],
+                    "content": content,
+                }
+            )
+        else:
+            api_messages.append(
+                {
+                    "role": message["role"],
+                    "content": content,
+                }
+            )
+
+    response = client.chat.completions.create(
+        model=VISION_MODEL,
+        messages=api_messages,
+    )
+
+    return response.choices[0].message.content
+
+
+def has_image(messages):
+    """Check whether conversation contains an image."""
+
+    for message in messages:
+
+        content = message.get("content")
+
+        if isinstance(content, list):
+
+            for part in content:
+
+                if part.get("type") == "image_url":
+                    return True
+
+    return False
+
+
+# =========================================================
 # SIDEBAR
-# ============================================================
+# =========================================================
 
 with st.sidebar:
 
-    st.markdown(
-        '<div class="sidebar-brand">'
-        '🔥 Aditya AI'
-        '</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown("# 🔥 Aditya AI")
 
-    st.markdown(
-        '<div class="sidebar-sub">'
-        'Fast • Multimodal • Web-enabled'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-
-    # NEW CHAT
+    st.caption("Fast • Multimodal • Web-enabled")
 
     if st.button(
-        "＋  New chat",
+        "＋ New chat",
         use_container_width=True,
-        type="primary"
     ):
-
         new_chat()
 
-        st.rerun()
+    st.markdown("---")
 
+    st.markdown("### 📍 Belpahar, Odisha")
 
-    # STATUS
+    st.success("● LIVE")
 
-    st.markdown(
-        """
-        <div class="status-card">
-
-            <div class="status-row">
-
-                <span>
-                    📍 Belpahar, Odisha
-                </span>
-
-                <span class="live">
-                    ● LIVE
-                </span>
-
-            </div>
-
-            <div
-                style="
-                    color:#737987;
-                    font-size:10px;
-                    margin-top:7px;
-                "
-            >
-                Web search • Code execution
-                • Vision • Voice
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.caption(
+        "Web search • Code • Vision • Voice"
     )
 
+    st.markdown("---")
 
-    # HISTORY
+    st.markdown("### 💬 Recent chats")
 
-    st.markdown(
-        '<div class="history-title">'
-        'Recent chats'
-        '</div>',
-        unsafe_allow_html=True
-    )
+    if not st.session_state.all_chats:
 
-
-    history = [
-
-        (chat_id, chat)
-
-        for chat_id, chat
-        in st.session_state.all_chats.items()
-
-        if chat.get("messages")
-
-    ]
-
-
-    if not history:
-
-        st.caption(
-            "Your conversations will appear here."
-        )
+        st.caption("No previous chats yet.")
 
     else:
 
-        for chat_id, chat in reversed(history):
+        chat_items = list(
+            st.session_state.all_chats.items()
+        )
 
-            title = (
-                chat.get("title")
-                or "New Chat"
+        chat_items.reverse()
+
+        for chat_id, chat_data in chat_items[:10]:
+
+            title = get_chat_title(
+                chat_data["messages"]
             )
 
-            if len(title) > 38:
-
-                title = title[:38] + "…"
-
-
             if st.button(
-                "🟠 " + title,
-                key="history_" + chat_id,
-                use_container_width=True
+                title,
+                key=f"history_{chat_id}",
+                use_container_width=True,
             ):
 
-                load_chat(chat_id)
+                st.session_state.current_chat_id = chat_id
+
+                st.session_state.messages = (
+                    chat_data["messages"].copy()
+                )
 
                 st.rerun()
 
+    st.markdown("---")
+
+    st.markdown("### ✨ Features")
+
+    st.caption("🌐 Web search")
+    st.caption("💻 Code & calculations")
+    st.caption("👁️ Image understanding")
+    st.caption("🎙️ Voice input")
+    st.caption("🔊 Voice responses")
+    st.caption("💬 Chat history")
 
     st.markdown("---")
 
-
-    st.markdown(
-        '<div class="history-title">'
-        'Features'
-        '</div>',
-        unsafe_allow_html=True
-    )
+    st.caption("Aditya AI")
+    st.caption("Created by Aditya")
 
 
-    st.markdown(
-        """
-        <div style="
-            color:#8a909d;
-            font-size:11px;
-            line-height:1.9;
-        ">
+# =========================================================
+# HEADER
+# =========================================================
 
-        🔎 Live web search<br>
-        💻 Code execution<br>
-        🖼️ Image understanding<br>
-        🎙️ Voice input<br>
-        🔊 AI voice output<br>
-        💬 Chat history
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-    st.markdown("---")
-
-
-    st.markdown(
-        '<div class="sidebar-note">'
-        'Made with ❤️ by Aditya<br>'
-        'Aditya AI v4.0'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# TOP BAR
-# ============================================================
-
-st.markdown(
-    """
-    <div class="topbar">
-
-        <div class="brand">
-
-            <div class="brand-icon">
-                🔥
-            </div>
-
-            <div>
-
-                <div class="brand-name">
-                    Aditya AI
-                </div>
-
-                <div class="brand-status">
-                    Your personal AI assistant
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
+top_left, top_right = st.columns(
+    [7, 1]
 )
 
+with top_left:
 
-# ============================================================
+    st.markdown(
+        "## 🔥 Aditya AI"
+    )
+
+    st.caption(
+        "Your personal multimodal AI assistant"
+    )
+
+with top_right:
+
+    if st.button(
+        "🗑️",
+        help="Start a new chat",
+    ):
+        new_chat()
+
+
+# =========================================================
 # WELCOME SCREEN
-# ============================================================
+# =========================================================
 
 if not st.session_state.messages:
 
     st.markdown(
         """
-        <div class="hero">
+        <div class="hero-card">
 
-            <div class="hero-icon">
-                🤖
-            </div>
+            <div class="hero-icon">🔥</div>
 
-            <h1>
+            <div class="hero-title">
                 Hi! I'm Aditya AI
-            </h1>
-
-            <div class="ready">
-
-                <span class="ready-dot"></span>
-
-                Ready to help
-
             </div>
 
-            <p>
-                Ask questions, write code,
-                analyze images, search the web,
-                calculate, or talk by voice.
-            </p>
+            <div class="ready-pill">
+                ● Ready to help
+            </div>
+
+            <div class="hero-subtitle">
+                Ask questions, write code, analyze images,
+                search the web, calculate, or talk by voice.
+            </div>
 
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
+    st.markdown("### 🚀 Try something")
 
-    # QUICK PROMPTS
+    q1, q2 = st.columns(2)
 
-    c1, c2 = st.columns(
-        2,
-        gap="small"
-    )
-
-
-    with c1:
+    with q1:
 
         if st.button(
-            "💡  What can you do?",
+            "💡 What can you do?",
             use_container_width=True,
-            key="quick_1"
         ):
 
             st.session_state.pending_prompt = (
-                "What
+                "What can you do?"
+            )
+
+            st.rerun()
+
+        if st.button(
+            "💻 Help me with Python",
+            use_container_width=True,
+        ):
+
+            st.session_state.pending_prompt = (
+                "Help me learn Python. "
+                "Give me a useful beginner example."
+            )
+
+            st.rerun()
+
+    with q2:
+
+        if st.button(
+            "🌐 What's happening today?",
+            use_container_width=True,
+        ):
+
+            st.session_state.pending_prompt = (
+                "What are the most important "
+                "current news stories today?"
+            )
+
+            st.rerun()
+
+        if st.button(
+            "🧪 Explain physics",
+            use_container_width=True,
+        ):
+
+            st.session_state.pending_prompt = (
+                "Explain an interesting physics concept "
+                "in a simple way."
+            )
+
+            st.rerun()
+
+
+# =========================================================
+# DISPLAY CHAT
+# =========================================================
+
+for index, message in enumerate(
+    st.session_state.messages
+):
+
+    role = message["role"]
+
+    if role == "user":
+
+        with st.chat_message(
+            "user",
+            avatar="👤",
+        ):
+
+            content = message["content"]
+
+            if isinstance(content, list):
+
+                text_parts = []
+
+                for part in content:
+
+                    if part["type"] == "text":
+                        text_parts.append(
+                            part["text"]
+                        )
+
+                if text_parts:
+                    st.markdown(
+                        "\n".join(text_parts)
+                    )
+
+                for part in content:
+
+                    if part["type"] == "image_url":
+
+                        try:
+
+                            image_url = (
+                                part["image_url"]["url"]
+                            )
+
+                            st.image(
+                                image_url,
+                                use_container_width=True,
+                            )
+
+                        except Exception:
+                            pass
+
+            else:
+
+                st.markdown(content)
+
+    elif role == "assistant":
+
+        with st.chat_message(
+            "assistant",
+            avatar="🔥",
+        ):
+
+            answer = message["content"]
+
+            st.markdown(answer)
+
+            # Save response
+            st.download_button(
+                label="💾 Save",
+                data=answer,
+                file_name="aditya_ai_response.txt",
+                mime="text/plain",
+                key=f"save_{index}",
+            )
+
+            # Voice response
+            if message.get("audio"):
+
+                st.audio(
+                    message["audio"],
+                    format="audio/mp3",
+                )
+
+
+# =========================================================
+# ATTACHMENTS & VOICE
+# =========================================================
+
+with st.expander(
+    "🧰 Attachments & Voice"
+):
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        uploaded_image = st.file_uploader(
+            "🖼️ Upload an image",
+            type=[
+                "jpg",
+                "jpeg",
+                "png",
+                "webp",
+            ],
+            help="Maximum 4 MB",
+        )
+
+    with col2:
+
+        audio_input = st.audio_input(
+            "🎙️ Record your question",
+            sample_rate=16000,
+        )
+
+
+# =========================================================
+# VOICE TRANSCRIPTION
+# =========================================================
+
+voice_prompt = None
+
+if audio_input is not None:
+
+    audio_bytes = audio_input.getvalue()
+
+    current_hash = hashlib.sha256(
+        audio_bytes
+    ).hexdigest()
+
+    if (
+        current_hash
+        != st.session_state.last_audio_hash
+    ):
+
+        with st.spinner(
+            "🎙️ Transcribing..."
+        ):
+
+            try:
+
+                voice_prompt = transcribe_audio(
+                    audio_input
+                )
+
+                st.session_state.last_audio_hash = (
+                    current_hash
+                )
+
+                if voice_prompt:
+
+                    st.info(
+                        f"🎙️ I heard: {voice_prompt}"
+                    )
+
+            except Exception as e:
+
+                st.error(
+                    "I couldn't transcribe that audio."
+                )
+
+                with st.expander(
+                    "Technical details"
+                ):
+
+                    st.code(str(e))
+
+
+# =========================================================
+# CHAT INPUT
+# =========================================================
+
+user_input = st.chat_input(
+    "Ask anything..."
+)
+
+
+# =========================================================
+# DETERMINE PROMPT
+# =========================================================
+
+prompt = None
+
+if st.session_state.pending_prompt:
+
+    prompt = st.session_state.pending_prompt
+
+    st.session_state.pending_prompt = None
+
+elif voice_prompt:
+
+    prompt = voice_prompt
+
+elif user_input:
+
+    prompt = user_input
+
+
+# =========================================================
+# REGENERATE
+# =========================================================
+
+regenerating = False
+
+if st.session_state.regenerate:
+
+    regenerating = True
+
+    st.session_state.regenerate = False
+
+    # Remove previous assistant answer
+    if (
+        st.session_state.messages
+        and st.session_state.messages[-1]["role"]
+        == "assistant"
+    ):
+
+        st.session_state.messages.pop()
+
+    # Find latest user message
+    for message in reversed(
+        st.session_state.messages
+    ):
+
+        if message["role"] == "user":
+
+            if isinstance(
+                message["content"],
+                str,
+            ):
+
+                prompt = message["content"]
+
+            else:
