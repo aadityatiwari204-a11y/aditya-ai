@@ -21,7 +21,8 @@ if "all_chats" not in st.session_state: st.session_state.all_chats={"chat_1":{"t
 if "current_chat_id" not in st.session_state: st.session_state.current_chat_id="chat_1"
 if "page" not in st.session_state: st.session_state.page="chat"
 
-# --- SIDEBAR ---
+SYSTEM_PROMPT = "You are Aditya AI, created by Aditya from Belpahar, Odisha. You are NOT ChatGPT, NOT OpenAI, NOT Meta AI. You are Aditya AI - Belpahar. If someone asks who are you, say: I am Aditya AI, made by Aditya from Belpahar, Jharsuguda, Odisha. I help with Photoshop, editing, study. Never mention OpenAI or ChatGPT."
+
 with st.sidebar:
     st.markdown("## ✨ Aditya AI - Belpahar")
     if st.button("💬 Chat", use_container_width=True):
@@ -38,39 +39,35 @@ with st.sidebar:
         if st.button(f"📄 {data['title'][:20]}", key=cid, use_container_width=True):
             st.session_state.current_chat_id=cid; st.session_state.messages=data["messages"]; st.session_state.page="chat"; st.rerun()
 
-# --- BLOG PAGE ---
 if st.session_state.page=="blog":
     st.markdown("# 🧑‍💻 Aditya - Belpahar")
     st.markdown("""
     **Hey, I'm Aditya from Belpahar, Odisha!** 🙏
-    
     I love making cool things with AI & Photoshop.
-    
+
     ### 🔥 About This AI:
     This is my own AI chatbot - Aditya AI, made with Python + Groq AI.
-    - You can chat in Hindi & English
+    - Chat in Hindi & English
     - Voice chat support
     - Photoshop & Editing help
-    
+
     ### 💡 Why I built it:
-    To learn AI and help friends in Belpahar with editing & study doubts.
-    
+    To learn AI and help friends in Belpahar.
+
     No Instagram / YouTube yet - this website is my first project!
-    
+
     **Location: Belpahar, Jharsuguda, Odisha**
     """)
     if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
     st.stop()
 
-# --- VOICE PAGE ---
 if st.session_state.page=="voice":
-    st.markdown("# 🎤 Voice Chat - Hindi + English")
-    st.caption("Press mic, speak, I will reply with voice!")
+    st.markdown("# 🎤 Voice Chat")
+    st.caption("Record and I will reply!")
     audio = st.audio_input("Record your voice")
     if audio:
         with st.spinner("Sun raha hu..."):
             try:
-                # Transcribe with Groq Whisper
                 transcription = client.audio.transcriptions.create(
                     file=(audio.name, audio.getvalue()),
                     model="whisper-large-v3-turbo",
@@ -78,25 +75,25 @@ if st.session_state.page=="voice":
                 )
                 user_text = transcription.text
                 st.success(f"You said: {user_text}")
-                # Get AI reply
-                r = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"system","content":"You are Aditya AI, created by Aditya from Belpahar. You are NOT ChatGPT, NOT OpenAI!"},{"role":"user","content":user_text}], max_tokens=1000)
+                r = client.chat.completions.create(
+                    model="openai/gpt-oss-20b",
+                    messages=[{"role":"system","content":SYSTEM_PROMPT},{"role":"user","content":user_text}],
+                    max_tokens=1000
+                )
                 ans = r.choices[0].message.content
                 st.markdown(ans.replace("<br>", " \n"))
-                # Speak back
                 lang='hi' if any('\u0900'<=c<='\u097F' for c in ans) else 'en'
                 tts=gTTS(text=ans[:400], lang=lang); b=io.BytesIO(); tts.write_to_fp(b); b.seek(0); st.audio(b, format="audio/mp3", autoplay=True)
             except Exception as e:
-                st.error(f"Voice Error: {e}. Try Chat page, voice still works there!")
+                st.error(f"Error: {e}")
     if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
     st.stop()
 
-# --- CHAT PAGE ---
 st.markdown("# 😊 Aditya AI")
 st.caption("Photoshop • Editing • Design • Hindi + English Voice")
 
 c1,c2,c3,c4 = st.columns(4)
-suggestions = ["Photoshop kya hai?", "Background blur kaise kare?", "Best editing apps?", "Thumbnail kaise banaye?"]
-for i, txt in enumerate(suggestions):
+for i, txt in enumerate(["Photoshop kya hai?", "Background blur kaise kare?", "Best editing apps?", "Thumbnail kaise banaye?"]):
     with [c1,c2,c3,c4][i]:
         if st.button(txt, key=f"s{i}"): st.session_state.sug=txt; st.rerun()
 
@@ -111,15 +108,15 @@ if inp:
     with st.chat_message("assistant"):
         ph=st.empty()
         try:
-            system_prompt = {"role":"system","content":"You are Aditya AI, created by Aditya from Belpahar, Odisha. You are NOT ChatGPT, NOT OpenAI. You are Aditya AI - Belpahar. Always say you are Aditya AI made by Aditya. You help with Photoshop, editing, Hindi+English. Never say OpenAI or ChatGPT. If asked who are you, say: I am Aditya AI, made by Aditya from Belpahar!"}
-msgs=[system_prompt] + [{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
+            msgs=[{"role":"system","content":SYSTEM_PROMPT}] + [{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
             r=client.chat.completions.create(model="openai/gpt-oss-20b", messages=msgs, max_tokens=1500)
             ans=r.choices[0].message.content
         except Exception as e:
             try:
                 r=client.chat.completions.create(model="openai/gpt-oss-120b", messages=msgs, max_tokens=1500)
                 ans=r.choices[0].message.content
-            except Exception as e2: ans=f"Error: {e2}"
+            except Exception as e2:
+                ans=f"Error: {e2}"
         ph.markdown(ans.replace("<br>", " \n"))
         try:
             lang='hi' if any('\u0900'<=c<='\u097F' for c in ans) else 'en'
