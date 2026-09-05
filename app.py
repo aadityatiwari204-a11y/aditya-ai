@@ -3,8 +3,7 @@ from groq import Groq
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Aditya AI", page_icon="🔥")
-st.sidebar.image("https://i.imgur.com/8QJ4sQh.png", width=150)
-st.sidebar.markdown("### Aditya AI")
+st.sidebar.markdown("## 🔥 Aditya AI")
 st.markdown("""
 <h2 style='margin-bottom:0px;'>🔥 Aditya AI</h2>
 <p style='font-size:16px; color:gray; margin-top:2px;'>Built by Aditya from Belpahar</p>
