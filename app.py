@@ -10,6 +10,7 @@ except:
 
 st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="wide")
 
+# --- PREMIUM ANIMATIONS + UI ---
 st.markdown("""
 <style>
     header[data-testid="stHeader"] { background: transparent; }
@@ -17,44 +18,100 @@ st.markdown("""
         background: linear-gradient(180deg, #0f0f12 0%, #1a1a22 100%);
         border-right: 1px solid #2a2a35;
     }
-   .sidebar-logo {
+  .sidebar-logo {
         font-size: 28px; font-weight: 800;
         background: linear-gradient(90deg, #ff6a00, #ee0979);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-   .sidebar-card {
+  .sidebar-card {
         background: #21212a; padding: 14px; border-radius: 12px;
         border: 1px solid #2f2f3d; margin: 12px 0;
     }
-   .sidebar-link {
+  .sidebar-link {
         display: block; padding: 10px 14px;
         background: #2a2a38; border-radius: 8px;
         color: white!important; text-decoration: none; margin: 6px 0;
     }
+
+    /* MOBILE HEADER */
     @media (max-width: 768px) {
-       .mobile-top-bar {
+      .mobile-top-bar {
             position: fixed; top: 0; left: 0; right: 0;
             height: 56px;
             background: rgba(15,15,18,0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid #2a2a35;
             display: flex; align-items: center;
-            padding-left: 52px;
-            z-index: 999;
+            padding-left: 52px; z-index: 999;
         }
-       .mobile-logo {
+      .mobile-logo {
             font-weight: 800; font-size: 18px;
             background: linear-gradient(90deg, #ff6a00, #ee0979);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-       .block-container { padding-top: 70px!important; }
+      .block-container { padding-top: 70px!important; }
     }
     @media (min-width: 769px) {
-       .mobile-top-bar { display: none; }
+      .mobile-top-bar { display: none; }
     }
+
+    /* ✨ THINKING ANIMATION */
+  .thinking-wrap {
+        display: flex; align-items: center; gap: 12px;
+        background: #1c1c24;
+        border: 1px solid #2a2a35;
+        padding: 14px 18px;
+        border-radius: 16px;
+        width: fit-content;
+    }
+  .thinking-avatar {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg, #ff6a00, #ee0979);
+        display: flex; align-items: center; justify-content: center;
+        animation: pulseGlow 2s infinite;
+    }
+  .dots { display: flex; gap: 4px; }
+  .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #ff6a00;
+        animation: bounceDot 1.4s infinite;
+    }
+  .dot:nth-child(2) { animation-delay: 0.2s; background: #ff8a33; }
+  .dot:nth-child(3) { animation-delay: 0.4s; background: #ee0979; }
+
+    @keyframes bounceDot {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+        40% { transform: translateY(-6px); opacity: 1; }
+    }
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(255,106,0,0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255,106,0,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,106,0,0); }
+    }
+  .shimmer-text {
+        background: linear-gradient(90deg, #888 0%, #fff 50%, #888 100%);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 1.5s infinite linear;
+        font-size: 13px;
+    }
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Voice listening animation */
+  .listening {
+        display: flex; align-items: center; gap: 8px;
+        color: #ff6a00; font-size: 13px;
+        animation: pulseText 1s infinite;
+    }
+    @keyframes pulseText { 0%,100% { opacity: 0.6 } 50% { opacity: 1 } }
 </style>
+
 <div class="mobile-top-bar">
     <div class="mobile-logo">🔥 Aditya AI</div>
 </div>
@@ -98,18 +155,22 @@ audio = st.audio_input("Record")
 transcribed_text = None
 
 if audio:
-    with st.spinner("Sun raha hu..."):
-        try:
-            txt = client.audio.transcriptions.create(
-                file=("audio.wav", audio.getvalue(), "audio/wav"),
-                model="whisper-large-v3",
-                response_format="text",
-                language="hi"
-            )
-            transcribed_text = str(txt)
-            st.success(f"You said: {transcribed_text}")
-        except Exception as e:
-            st.error(f"Voice Error: {e}")
+    # Animated listening state
+    listen_ph = st.empty()
+    listen_ph.markdown('<div class="listening">🔴 Listening... transcribing...</div>', unsafe_allow_html=True)
+    try:
+        txt = client.audio.transcriptions.create(
+            file=("audio.wav", audio.getvalue(), "audio/wav"),
+            model="whisper-large-v3",
+            response_format="text",
+            language="hi"
+        )
+        transcribed_text = str(txt)
+        listen_ph.empty()
+        st.success(f"You said: {transcribed_text}")
+    except Exception as e:
+        listen_ph.empty()
+        st.error(f"Voice Error: {e}")
 
 user_input = st.chat_input("Ask me anything...")
 if transcribed_text:
@@ -121,32 +182,48 @@ if user_input:
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        with st.spinner("Soch raha hu..."):
-            try:
-                system_msg = {
-                    "role": "system",
-                    "content": "You are Aditya AI, created by Aditya from Belpahar. NOT ChatGPT."
-                }
-                res = client.chat.completions.create(
-                    model="openai/gpt-oss-20b",
-                    messages=[system_msg] + st.session_state.messages
-                )
-                reply = res.choices[0].message.content
-                st.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
+        # ✨ SUBTLE THINKING ANIMATION
+        thinking_placeholder = st.empty()
+        thinking_placeholder.markdown("""
+        <div class="thinking-wrap">
+            <div class="thinking-avatar">🔥</div>
+            <div>
+                <div class="shimmer-text">Aditya AI is thinking...</div>
+                <div class="dots">
+                    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-                if TTS:
-                    try:
-                        if any('\u0900' <= c <= '\u097F' for c in reply):
-                            lang_code = 'hi'
-                        else:
-                            lang_code = 'en'
-                        tts = gTTS(text=reply[:500], lang=lang_code)
-                        fp = io.BytesIO()
-                        tts.write_to_fp(fp)
-                        fp.seek(0)
-                        st.audio(fp, format="audio/mp3", autoplay=True)
-                    except:
-                        pass
-            except Exception as e:
-                st.error(f"Error: {e}")
+        try:
+            system_msg = {
+                "role": "system",
+                "content": "You are Aditya AI, created by Aditya from Belpahar. NOT ChatGPT."
+            }
+            res = client.chat.completions.create(
+                model="openai/gpt-oss-20b",
+                messages=[system_msg] + st.session_state.messages
+            )
+            reply = res.choices[0].message.content
+
+            thinking_placeholder.empty()
+            st.markdown(reply)
+            st.session_state.messages.append({"role": "assistant", "content": reply})
+
+            if TTS:
+                try:
+                    if any('\u0900' <= c <= '\u097F' for c in reply):
+                        lang_code = 'hi'
+                    else:
+                        lang_code = 'en'
+                    tts = gTTS(text=reply[:500], lang=lang_code)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    st.audio(fp, format="audio/mp3", autoplay=True)
+                except:
+                    pass
+        except Exception as e:
+            thinking_placeholder.empty()
+            st.error(f"Error: {e}")
