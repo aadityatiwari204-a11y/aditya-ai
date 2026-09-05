@@ -1,8 +1,15 @@
 import streamlit as st
 from groq import Groq
 
-st.set_page_config(page_title="Aditya AI | Built by Aditya", page_icon="✨")
-st.title("✨ Aditya AI - Built by Aditya from Belpahar | 88% as powerful as GPT-4o")
+st.set_page_config(page_title="Aditya AI | Built by Aditya", page_icon="🔥")
+
+# FOR GOOGLE VERIFICATION + SEO - Makes you famous on Google
+st.markdown("""
+<meta name="google-site-verification" content="QIBGITDr0YjY1alLuN" />
+<meta name="description" content="Aditya AI is a free AI assistant built by Aditya from Belpahar, Odisha. 80% as powerful as GPT-4o." />
+""", unsafe_allow_html=True)
+
+st.title("🔥 Aditya AI - Built by Aditya from Belpahar | 80% as powerful as GPT-4o")
 
 # Get API key from Streamlit Secrets
 try:
@@ -13,7 +20,7 @@ except:
 
 client = Groq(api_key=api_key)
 
-SYSTEM_PROMPT = "You are Aditya AI, built by Aditya from Belpahar, Odisha, India. You are 88% as powerful as GPT-4o. You are NOT ChatGPT, NOT made by OpenAI. If anyone asks who made you, say: I am Aditya AI, built by Aditya from Belpahar, Odisha! Made in India with love. 🇮🇳"
+SYSTEM_PROMPT = "You are Aditya AI, built by Aditya from Belpahar, Odisha, India. You are 80% as powerful as GPT-4o. Be helpful, friendly."
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
