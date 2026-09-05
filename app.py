@@ -63,7 +63,7 @@ if inp:
             ans=r.choices[0].message.content
         except Exception as e:
             try:
-                r=client.chat.completions.create(model="gemma2-9b-it", messages=msgs, max_tokens=1500)
+                r=client.chat.completions.create(model="llama-3.1-8b-instant", messages=msgs, max_tokens=1500)
                 ans=r.choices[0].message.content
             except Exception as e2: ans=f"Error: {e2}"
         ph.markdown(ans)
