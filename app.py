@@ -1,7 +1,6 @@
 import streamlit as st
 from groq import Groq
 import uuid
-from datetime import datetime
 
 st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="wide")
 
@@ -36,9 +35,28 @@ div[data-testid="stButton"] > button:hover { border-color: #ff6a00!important; co
 @st.cache_resource
 def get_client():
     try: key = st.secrets["GROQ_API_KEY"]
-    except: st.error("Add GROQ_API_KEY in Secrets"); st.stop()
+    except:
+        st.error("Add GROQ_API_KEY in Secrets");
+        st.stop()
     return Groq(api_key=key)
+
 client = get_client()
+
+# --- STRONG SYSTEM PROMPT - THIS FIXES IRRELEVANT ANSWERS ---
+SYSTEM_PROMPT = """
+You are Aditya AI, created by Aditya Tiwari from Belpahar, Odisha, India.
+You are like ChatGPT - smart, helpful, friendly.
+
+RULES:
+1. Answer EVERY question. Never refuse.
+2. For coding: give full working code + simple explanation.
+3. For maths: solve step-by-step clearly.
+4. For general questions: give correct, simple, complete answer.
+5. Be concise but complete. Use bullet points, code blocks when needed.
+6. Never say you are Meta AI, Llama, Groq, or ChatGPT. You are Aditya AI.
+7. If user asks who made you, say: "I am Aditya AI made by Aditya Tiwari from Belpahar, Odisha."
+8. Support students - explain simply like a teacher.
+"""
 
 if "messages" not in st.session_state: st.session_state.messages = []
 if "all_chats" not in st.session_state: st.session_state.all_chats = {}
@@ -80,26 +98,27 @@ if not st.session_state.messages:
     </div>
     """, unsafe_allow_html=True)
     st.markdown('<div class="try-label">Try something</div>', unsafe_allow_html=True)
-    if st.button("What can you do?", use_container_width=True, key="b1"):
-        st.session_state.pending_prompt = "What can you do?"; st.rerun()
-    if st.button("Help me with Python", use_container_width=True, key="b2"):
-        st.session_state.pending_prompt = "Help me with Python with example"; st.rerun()
-    if st.button("What's happening today?", use_container_width=True, key="b3"):
-        st.session_state.pending_prompt = "What's happening today?"; st.rerun()
-    if st.button("Explain physics simply", use_container_width=True, key="b4"):
-        st.session_state.pending_prompt = "Explain physics simply"; st.rerun()
+    c1,c2 = st.columns(2)
+    with c1:
+        if st.button("What can you do?", use_container_width=True, key="b1"):
+            st.session_state.pending_prompt = "What can you do? Explain all your features in detail."; st.rerun()
+        if st.button("What's happening today?", use_container_width=True, key="b3"):
+            st.session_state.pending_prompt = "What's happening today? Give latest info."; st.rerun()
+    with c2:
+        if st.button("Help me with Python", use_container_width=True, key="b2"):
+            st.session_state.pending_prompt = "Help me with Python with example code"; st.rerun()
+        if st.button("Explain physics simply", use_container_width=True, key="b4"):
+            st.session_state.pending_prompt = "Explain physics simply like I am a student"; st.rerun()
 
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("<div class='feature-card'><div style='font-size:22px;'>Web</div><div style='font-weight:700;margin:6px 0;'>Web-Aware</div><div style='font-size:12px;color:#888;'>Current info</div></div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown("<div class='feature-card'><div style='font-size:22px;'>Fast</div><div style='font-weight:700;margin:6px 0;'>Super Fast</div><div style='font-size:12px;color:#888;'>Powered by Groq</div></div>", unsafe_allow_html=True)
-    with col3:
-        st.markdown("<div class='feature-card'><div style='font-size:22px;'>Voice</div><div style='font-weight:700;margin:6px 0;'>Voice Chat</div><div style='font-size:12px;color:#888;'>Speak to AI</div></div>", unsafe_allow_html=True)
+    with col1: st.markdown("<div class='feature-card'><div style='font-size:22px;'>🌐</div><div style='font-weight:700;margin:6px 0;'>Web-Aware</div><div style='font-size:12px;color:#888;'>Current info</div></div>", unsafe_allow_html=True)
+    with col2: st.markdown("<div class='feature-card'><div style='font-size:22px;'>⚡</div><div style='font-weight:700;margin:6px 0;'>Super Fast</div><div style='font-size:12px;color:#888;'>Powered by Groq</div></div>", unsafe_allow_html=True)
+    with col3: st.markdown("<div class='feature-card'><div style='font-size:22px;'>🎙️</div><div style='font-weight:700;margin:6px 0;'>Voice Chat</div><div style='font-size:12px;color:#888;'>Speak to AI</div></div>", unsafe_allow_html=True)
 else:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]): st.markdown(msg["content"])
 
+# Voice
 audio = st.audio_input("Record", label_visibility="collapsed", key="voice_input")
 transcribed_text = None
 if audio and audio.file_id!= st.session_state.last_audio_id:
@@ -107,8 +126,8 @@ if audio and audio.file_id!= st.session_state.last_audio_id:
     try:
         result = client.audio.transcriptions.create(file=("audio.wav", audio.getvalue(), "audio/wav"), model="whisper-large-v3", response_format="text")
         transcribed_text = str(result).strip()
-        if len(transcribed_text) < 2: transcribed_text = None
-        else: st.toast(f"You said: {transcribed_text}")
+        if len(transcribed_text) >= 2: st.toast(f"You said: {transcribed_text}")
+        else: transcribed_text = None
     except Exception as e: st.error(f"Voice error: {e}")
 
 final_input = None
@@ -129,17 +148,33 @@ if final_input and final_input.strip()!= "":
     with st.chat_message("assistant"):
         ph = st.empty(); full_answer = ""
         try:
-            msgs = [{"role":"system","content":"You are Aditya AI built by Aditya from Belpahar. You are NOT ChatGPT. Be helpful and concise."}]
-            for m in st.session_state.messages[-8:]: msgs.append({"role":m["role"],"content":str(m["content"])[:2000]})
-            res = client.chat.completions.create(model="openai/gpt-oss-20b", messages=msgs, max_tokens=1500)
+            msgs = [{"role":"system","content":SYSTEM_PROMPT}]
+            for m in st.session_state.messages[-10:]:
+                msgs.append({"role":m["role"],"content":str(m["content"])[:3000]})
+
+            # FIXED MODEL - THIS IS THE MAIN FIX
+            res = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=msgs,
+                max_tokens=2000,
+                temperature=0.7
+            )
             full_answer = res.choices[0].message.content
             ph.markdown(full_answer)
         except Exception as e:
+            # Fallback to 8b if 70b fails
             try:
-                res = client.chat.completions.create(model="groq/compound", messages=msgs, max_tokens=1500)
-                full_answer = res.choices[0].message.content; ph.markdown(full_answer)
+                res = client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=msgs,
+                    max_tokens=2000
+                )
+                full_answer = res.choices[0].message.content
+                ph.markdown(full_answer)
             except Exception as e2:
-                full_answer = f"Please try again after 20 sec. Error: {e2}"; ph.markdown(full_answer)
+                full_answer = f"Server busy, try again in 10 sec. Error: {e2}"
+                ph.markdown(full_answer)
+
     st.session_state.messages.append({"role":"assistant","content":full_answer})
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = list(st.session_state.messages)
     st.session_state.all_chats[st.session_state.current_chat_id]["title"] = final_input[:35]
