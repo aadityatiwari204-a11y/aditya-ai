@@ -154,7 +154,7 @@ if final_input and final_input.strip()!= "":
 
             # FIXED MODEL - THIS IS THE MAIN FIX
             res = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+               model="openai/gpt-oss-20b",
                 messages=msgs,
                 max_tokens=2000,
                 temperature=0.7
@@ -165,7 +165,7 @@ if final_input and final_input.strip()!= "":
             # Fallback to 8b if 70b fails
             try:
                 res = client.chat.completions.create(
-                    model="llama3-8b-8192",
+                    model="llama-3.1-8b-instant",
                     messages=msgs,
                     max_tokens=2000
                 )
