@@ -24,15 +24,20 @@ else:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
-# --- OFFICIAL VOICE RECORDER ---
+# --- OFFICIAL VOICE RECORDER - POLISHED ---
 st.markdown("#### 🎤 Voice Chat (Hindi/English)")
-audio = st.audio_input("Tap to record, then it auto-sends")
+voice_status = st.empty()
+voice_status.markdown("🎙️ **Tap to speak** - Click mic to start")
+
+audio = st.audio_input("🔴 Listening... Tap mic to record")
 
 transcribed_text = None
 user_input = None
 
 if audio:
-    with st.spinner("🎧 Sun raha hu... transcribing..."):
+    voice_status.warning("🔴 **Listening...** - Recording captured!")
+    with st.spinner("🧠 **Thinking...** - Sun raha hu... transcribing..."):
+        try:
         try:
             # Groq Whisper transcription
             transcription = client.audio.transcriptions.create(
