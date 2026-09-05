@@ -6,13 +6,6 @@ from datetime import datetime
 import streamlit as st
 from groq import Groq
 
-# Optional text-to-speech
-try:
-    from gtts import gTTS
-    GTTS_AVAILABLE = True
-except ImportError:
-    GTTS_AVAILABLE = False
-
 
 # ============================================================
 # PAGE CONFIG
@@ -27,69 +20,51 @@ st.set_page_config(
 
 
 # ============================================================
-# MODELS
+# MODEL CONFIG
 # ============================================================
 
-TEXT_MODEL = "groq/compound"
-WHISPER_MODEL = "whisper-large-v3"
+TEXT_MODELS = [
+    "groq/compound",
+    "openai/gpt-oss-120b",
+    "llama-3.3-70b-versatile",
+]
 
-# We DON'T blindly use one vision model anymore.
-# The app checks which of these are actually available
-# to your Groq API key.
 VISION_MODELS = [
     "qwen/qwen3.6-27b",
     "qwen/qwen3.8-27b",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
+]
+
+WHISPER_MODELS = [
+    "whisper-large-v3",
+    "whisper-large-v3-turbo",
 ]
 
 MAX_IMAGE_BYTES = 20 * 1024 * 1024
-
-
-# ============================================================
-# SYSTEM PROMPT
-# ============================================================
+MAX_AUDIO_BYTES = 25 * 1024 * 1024
+MAX_HISTORY_MESSAGES = 24
 
 SYSTEM_PROMPT = """
-You are Aditya AI, a helpful multimodal AI assistant.
+You are Aditya AI, a helpful, intelligent and friendly multimodal AI assistant.
 
-You are not ChatGPT and must not claim to be ChatGPT.
+You are not ChatGPT and must never claim to be ChatGPT.
 
-Be:
-- accurate
-- friendly
-- clear
-- practical
-- concise when the question is simple
-- detailed when the user asks for detail
-
-Answer in the user's language when practical.
-
-For current information, news, recent events, prices,
-weather, live information, or anything time-sensitive,
-use your available web-search tools.
-
-For calculations and technical tasks, use available tools
-when they improve accuracy.
-
-For coding:
-- provide working code
-- explain important parts
-- avoid unnecessary complexity
-- do not invent libraries, APIs, or features
-
-For images:
-- carefully inspect the image
-- describe only what you can actually determine
-- say when something is unclear
-- never pretend to see something that is not visible
-
-Do not invent sources, facts, capabilities, or tool results.
+Your goals:
+- Give accurate and useful answers.
+- Be clear and easy to understand.
+- Answer in the user's language when appropriate.
+- Help with coding and programming.
+- Help with mathematics and calculations.
+- Explain difficult topics simply.
+- Analyze images when an image is provided.
+- Use available web capabilities when current information is required.
+- Never invent facts, sources, links, or capabilities.
+- If you are unsure, clearly say so.
+- For code, provide complete and practical solutions whenever appropriate.
 """.strip()
 
 
 # ============================================================
-# STYLING
+# CUSTOM CSS
 # ============================================================
 
 st.markdown(
@@ -99,58 +74,54 @@ st.markdown(
 :root {
     --bg: #09090d;
     --panel: rgba(255,255,255,0.055);
-    --panel-strong: rgba(255,255,255,0.085);
+    --panel2: rgba(255,255,255,0.075);
     --border: rgba(255,255,255,0.10);
-    --muted: #9b9ba8;
-    --text: #f6f6f8;
-    --accent1: #ff7a18;
-    --accent2: #ff2d8d;
+    --text: #f5f5f7;
+    --muted: #a0a0ad;
+    --orange: #ff7a18;
+    --pink: #ff2d8d;
 }
 
 .stApp {
     background:
         radial-gradient(
             circle at 15% 5%,
-            rgba(255, 122, 24, .12),
+            rgba(255,122,24,.12),
             transparent 30%
         ),
         radial-gradient(
             circle at 90% 10%,
-            rgba(255, 45, 141, .10),
-            transparent 28%
+            rgba(255,45,141,.10),
+            transparent 30%
         ),
         var(--bg);
-
     color: var(--text);
 }
 
 .block-container {
     max-width: 1180px;
-    padding-top: 1.25rem;
+    padding-top: 1.2rem;
     padding-bottom: 4rem;
 }
 
 section[data-testid="stSidebar"] {
-    background: rgba(12, 12, 18, .96);
+    background: rgba(10,10,15,.97);
     border-right: 1px solid var(--border);
 }
 
 section[data-testid="stSidebar"] .block-container {
-    padding-top: 1.2rem;
+    padding-top: 1rem;
 }
 
 .brand {
-    font-size: 1.55rem;
+    font-size: 1.65rem;
     font-weight: 850;
-    letter-spacing: -.03em;
-
-    background:
-        linear-gradient(
-            90deg,
-            var(--accent1),
-            var(--accent2)
-        );
-
+    letter-spacing: -0.04em;
+    background: linear-gradient(
+        90deg,
+        var(--orange),
+        var(--pink)
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -158,174 +129,150 @@ section[data-testid="stSidebar"] .block-container {
 .brand-sub {
     color: var(--muted);
     font-size: .78rem;
-    margin-top: -4px;
+    margin-top: -5px;
 }
 
-.sidebar-card,
-.hero-card,
-.feature-card,
-.status-card {
+.hero {
+    max-width: 900px;
+    margin: 20px auto 25px;
+    padding: 42px 25px 35px;
+    text-align: center;
+    border-radius: 24px;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    box-shadow: 0 14px 45px rgba(0,0,0,.18);
-}
-
-.sidebar-card {
-    padding: 15px;
-    margin: 12px 0;
-}
-
-.status-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: center;
-    color: #dddde5;
-    font-size: .86rem;
-}
-
-.live-pill {
-    color: #8df3ad;
-    background: rgba(50, 210, 100, .10);
-    border: 1px solid rgba(50, 210, 100, .20);
-    border-radius: 999px;
-    padding: 3px 8px;
-    font-size: .72rem;
-    font-weight: 700;
-}
-
-.hero-card {
-    text-align: center;
-    padding: 42px 24px 32px;
-    margin: 10px auto 24px;
-    max-width: 850px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.20);
 }
 
 .hero-icon {
-    width: 76px;
-    height: 76px;
-
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    margin: 0 auto 14px;
-
     border-radius: 24px;
     font-size: 3rem;
-
     background:
         linear-gradient(
             135deg,
             rgba(255,122,24,.18),
-            rgba(255,45,141,.16)
+            rgba(255,45,141,.18)
         );
-
     border: 1px solid rgba(255,255,255,.10);
 }
 
 .hero-title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    line-height: 1.05;
+    font-size: clamp(2rem, 5vw, 3.2rem);
     font-weight: 850;
-    letter-spacing: -.05em;
-    margin-bottom: 12px;
+    letter-spacing: -.055em;
+    line-height: 1.05;
 }
 
-.hero-gradient {
+.gradient-text {
     background:
         linear-gradient(
             90deg,
-            #fff,
-            #ffb06e,
-            #ff75b5
+            #ffffff,
+            #ffae6b,
+            #ff70b3
         );
-
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.hero-description {
+    max-width: 680px;
+    margin: 15px auto 0;
+    color: var(--muted);
+    line-height: 1.65;
 }
 
 .ready {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-
-    color: #9df3b5;
-
-    background: rgba(50,210,100,.08);
-    border: 1px solid rgba(50,210,100,.18);
-
+    margin-top: 14px;
+    padding: 6px 12px;
     border-radius: 999px;
-    padding: 6px 11px;
-
+    color: #9af3b2;
+    background: rgba(60,210,100,.08);
+    border: 1px solid rgba(60,210,100,.18);
     font-size: .8rem;
-    font-weight: 650;
+    font-weight: 700;
 }
 
 .ready-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-
     background: #65e890;
     box-shadow: 0 0 12px #65e890;
 }
 
-.hero-desc {
-    max-width: 650px;
-    margin: 16px auto 0;
-
-    color: var(--muted);
-
-    line-height: 1.65;
-}
-
-.section-label {
-    color: #d9d9e2;
-    font-size: .88rem;
-    font-weight: 700;
-    margin: 12px 0 9px;
+.section-title {
+    margin: 15px 0 10px;
+    font-size: .9rem;
+    font-weight: 750;
 }
 
 .feature-card {
-    padding: 17px;
-    height: 100%;
+    min-height: 125px;
+    padding: 18px;
+    border-radius: 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
 }
 
 .feature-icon {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     margin-bottom: 8px;
 }
 
 .feature-title {
     font-weight: 750;
-    margin-bottom: 4px;
 }
 
-.feature-text {
+.feature-description {
+    margin-top: 5px;
     color: var(--muted);
     font-size: .82rem;
     line-height: 1.45;
 }
 
-.footer-note {
-    color: #6f6f7c;
+.sidebar-card {
+    padding: 15px;
+    margin: 12px 0;
+    border-radius: 17px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+.status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: .82rem;
+}
+
+.status-good {
+    color: #8df3ad;
+}
+
+.footer {
+    margin-top: 35px;
+    padding: 15px;
     text-align: center;
+    color: #70707d;
     font-size: .75rem;
-    padding: 12px 0;
 }
 
 .stButton > button,
 .stDownloadButton > button {
     border-radius: 12px;
-
     border: 1px solid rgba(255,255,255,.10);
-
     background: rgba(255,255,255,.045);
-
-    color: #f4f4f6;
-
+    color: #f5f5f7;
     transition: .18s ease;
 }
 
@@ -344,20 +291,23 @@ section[data-testid="stSidebar"] .block-container {
     .block-container {
         padding-left: .7rem;
         padding-right: .7rem;
-        padding-top: .8rem;
+        padding-top: .7rem;
     }
 
-    .hero-card {
-        padding: 30px 15px 25px;
-    }
-
-    .hero-icon {
-        width: 64px;
-        height: 64px;
-        font-size: 2.4rem;
+    .hero {
+        padding: 30px 15px 26px;
         border-radius: 20px;
     }
 
+    .hero-icon {
+        width: 65px;
+        height: 65px;
+        font-size: 2.4rem;
+    }
+
+    .feature-card {
+        margin-bottom: 10px;
+    }
 }
 
 </style>
@@ -371,54 +321,37 @@ section[data-testid="stSidebar"] .block-container {
 # ============================================================
 
 try:
-    api_key = st.secrets["GROQ_API_KEY"]
+    API_KEY = st.secrets["GROQ_API_KEY"]
 except Exception:
+    API_KEY = ""
+
+if not API_KEY:
     st.error(
         "GROQ_API_KEY is missing. "
-        "Add it under Streamlit Cloud → Settings → Secrets."
+        "Add GROQ_API_KEY in Streamlit → Settings → Secrets."
     )
     st.stop()
 
-
-# ============================================================
-# GROQ CLIENT
-# ============================================================
-
-try:
-    client = Groq(api_key=api_key)
-except Exception as exc:
-    st.error("Could not initialize Groq.")
-    st.code(str(exc))
-    st.stop()
+client = Groq(api_key=API_KEY)
 
 
 # ============================================================
 # SESSION STATE
 # ============================================================
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+DEFAULTS = {
+    "messages": [],
+    "all_chats": {},
+    "current_chat_id": "chat_1",
+    "pending_prompt": None,
+    "regenerate": False,
+    "last_audio_hash": None,
+    "selected_model": None,
+}
 
-if "all_chats" not in st.session_state:
-    st.session_state.all_chats = {}
-
-if "current_chat_id" not in st.session_state:
-    st.session_state.current_chat_id = "chat_1"
-
-if "pending_prompt" not in st.session_state:
-    st.session_state.pending_prompt = None
-
-if "regenerate" not in st.session_state:
-    st.session_state.regenerate = False
-
-if "last_audio_hash" not in st.session_state:
-    st.session_state.last_audio_hash = None
-
-if "available_models" not in st.session_state:
-    st.session_state.available_models = None
-
-if "vision_model" not in st.session_state:
-    st.session_state.vision_model = None
+for key, value in DEFAULTS.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 # ============================================================
@@ -426,58 +359,37 @@ if "vision_model" not in st.session_state:
 # ============================================================
 
 @st.cache_resource(ttl=600)
-def get_available_model_ids():
-    """
-    Ask Groq which models are available to this API key.
-
-    This prevents the app from blindly calling a model that
-    your particular API key/project cannot access.
-    """
-
+def get_available_models():
     try:
-        models = client.models.list()
-
-        ids = set()
-
-        for model in models.data:
-            model_id = getattr(model, "id", None)
-
-            if model_id:
-                ids.add(model_id)
-
-        return ids
-
+        response = client.models.list()
+        return {
+            model.id
+            for model in response.data
+            if getattr(model, "id", None)
+        }
     except Exception:
         return set()
 
 
-def choose_vision_model():
-    """
-    Select the first vision model from our known list that
-    is actually available to the current API key.
-
-    If no known vision model is available, return None.
-    """
-
-    available = get_available_model_ids()
+def choose_model(candidates):
+    available = get_available_models()
 
     if not available:
-        return None
+        return candidates[0]
 
-    for model in VISION_MODELS:
+    for model in candidates:
         if model in available:
             return model
 
     return None
 
 
-# Determine the vision model once.
-if st.session_state.vision_model is None:
-    st.session_state.vision_model = choose_vision_model()
+def refresh_models():
+    get_available_models.clear()
 
 
 # ============================================================
-# CHAT HELPERS
+# CHAT FUNCTIONS
 # ============================================================
 
 def sync_chat():
@@ -491,8 +403,9 @@ def sync_chat():
     }
 
 
-def create_new_chat():
-    sync_chat()
+def new_chat():
+    if st.session_state.messages:
+        sync_chat()
 
     st.session_state.current_chat_id = (
         f"chat_{int(datetime.now().timestamp() * 1000)}"
@@ -505,29 +418,33 @@ def create_new_chat():
     st.rerun()
 
 
-def chat_title(messages):
-    for msg in messages:
+def get_chat_title(messages):
+    for message in messages:
 
-        if msg.get("role") != "user":
+        if message.get("role") != "user":
             continue
 
-        content = msg.get("content", "")
+        content = message.get("content", "")
 
         if isinstance(content, str):
             title = " ".join(content.split())
         else:
             title = "Image conversation"
 
+        if not title:
+            return "New chat"
+
         return (
-            title[:34] +
-            ("..." if len(title) > 34 else "")
+            title[:34] + "..."
+            if len(title) > 34
+            else title
         )
 
     return "New chat"
 
 
 # ============================================================
-# IMAGE
+# IMAGE FUNCTIONS
 # ============================================================
 
 def image_to_data_url(uploaded_file):
@@ -536,7 +453,8 @@ def image_to_data_url(uploaded_file):
 
     if len(data) > MAX_IMAGE_BYTES:
         raise ValueError(
-            "Please use an image smaller than 20 MB."
+            "Image is too large. Please use an image "
+            "smaller than 20 MB."
         )
 
     mime = uploaded_file.type
@@ -549,7 +467,7 @@ def image_to_data_url(uploaded_file):
 
     if mime not in allowed:
         raise ValueError(
-            "Supported image formats: JPG, PNG, and WEBP."
+            "Supported image formats are JPG, PNG and WEBP."
         )
 
     encoded = base64.b64encode(data).decode("utf-8")
@@ -557,11 +475,11 @@ def image_to_data_url(uploaded_file):
     return f"data:{mime};base64,{encoded}"
 
 
-def has_image(messages):
+def conversation_has_image(messages):
 
-    for msg in messages:
+    for message in messages:
 
-        content = msg.get("content")
+        content = message.get("content")
 
         if isinstance(content, list):
 
@@ -574,95 +492,24 @@ def has_image(messages):
 
 
 # ============================================================
-# VOICE
+# MODEL MESSAGE PREPARATION
 # ============================================================
 
-def transcribe_audio(audio_file):
+def prepare_messages(messages):
 
-    audio_bytes = audio_file.getvalue()
+    result = []
 
-    stream = io.BytesIO(audio_bytes)
+    for message in messages:
 
-    stream.name = (
-        getattr(audio_file, "name", None)
-        or "recording.wav"
-    )
-
-    result = client.audio.transcriptions.create(
-        file=stream,
-        model=WHISPER_MODEL,
-        response_format="text",
-    )
-
-    if isinstance(result, str):
-        return result.strip()
-
-    return getattr(
-        result,
-        "text",
-        str(result)
-    ).strip()
-
-
-# ============================================================
-# TEXT TO SPEECH
-# ============================================================
-
-def make_tts(text):
-
-    if not GTTS_AVAILABLE:
-        return None
-
-    if not text.strip():
-        return None
-
-    try:
-
-        has_devanagari = any(
-            "\u0900" <= ch <= "\u097F"
-            for ch in text
-        )
-
-        lang = "hi" if has_devanagari else "en"
-
-        buf = io.BytesIO()
-
-        gTTS(
-            text=text[:3000],
-            lang=lang,
-            slow=False,
-        ).write_to_fp(buf)
-
-        return buf.getvalue()
-
-    except Exception:
-        return None
-
-
-# ============================================================
-# API MESSAGE CLEANING
-# ============================================================
-
-def prepare_api_messages(messages):
-
-    api_messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT,
-        }
-    ]
-
-    for msg in messages:
-
-        role = msg.get("role")
-        content = msg.get("content")
+        role = message.get("role")
+        content = message.get("content")
 
         if role not in {"user", "assistant"}:
             continue
 
-        # Assistant audio is UI-only and must not be sent.
         if isinstance(content, str):
-            api_messages.append(
+
+            result.append(
                 {
                     "role": role,
                     "content": content,
@@ -671,15 +518,13 @@ def prepare_api_messages(messages):
 
         elif isinstance(content, list):
 
-            clean_parts = []
+            parts = []
 
             for part in content:
 
-                part_type = part.get("type")
+                if part.get("type") == "text":
 
-                if part_type == "text":
-
-                    clean_parts.append(
+                    parts.append(
                         {
                             "type": "text",
                             "text": part.get(
@@ -689,35 +534,27 @@ def prepare_api_messages(messages):
                         }
                     )
 
-                elif part_type == "image_url":
+                elif part.get("type") == "image_url":
 
-                    image_url = (
-                        part
-                        .get("image_url", {})
-                        .get("url")
+                    parts.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": part[
+                                    "image_url"
+                                ]["url"]
+                            },
+                        }
                     )
 
-                    if image_url:
+            result.append(
+                {
+                    "role": role,
+                    "content": parts,
+                }
+            )
 
-                        clean_parts.append(
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": image_url
-                                },
-                            }
-                        )
-
-            if clean_parts:
-
-                api_messages.append(
-                    {
-                        "role": role,
-                        "content": clean_parts,
-                    }
-                )
-
-    return api_messages
+    return result[-MAX_HISTORY_MESSAGES:]
 
 
 # ============================================================
@@ -726,16 +563,70 @@ def prepare_api_messages(messages):
 
 def call_text_model(messages):
 
-    api_messages = prepare_api_messages(messages)
+    model = choose_model(TEXT_MODELS)
 
-    result = client.chat.completions.create(
-        model=TEXT_MODEL,
-        messages=api_messages,
+    if model is None:
+        raise RuntimeError(
+            "No supported text model is currently available "
+            "for this Groq API key."
+        )
+
+    api_messages = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        }
+    ]
+
+    api_messages.extend(
+        prepare_messages(messages)
     )
 
-    content = result.choices[0].message.content
+    try:
 
-    return content or ""
+        response = client.chat.completions.create(
+            model=model,
+            messages=api_messages,
+        )
+
+        if not response.choices:
+            raise RuntimeError(
+                "The model returned no response."
+            )
+
+        return (
+            response.choices[0]
+            .message
+            .content
+            or ""
+        )
+
+    except Exception as first_error:
+
+        for fallback in TEXT_MODELS:
+
+            if fallback == model:
+                continue
+
+            try:
+
+                response = client.chat.completions.create(
+                    model=fallback,
+                    messages=api_messages,
+                )
+
+                if response.choices:
+                    return (
+                        response.choices[0]
+                        .message
+                        .content
+                        or ""
+                    )
+
+            except Exception:
+                continue
+
+        raise first_error
 
 
 # ============================================================
@@ -744,85 +635,172 @@ def call_text_model(messages):
 
 def call_vision_model(messages):
 
-    vision_model = st.session_state.vision_model
+    model = choose_model(VISION_MODELS)
 
-    if not vision_model:
+    if model is None:
         raise RuntimeError(
-            "No vision model available for your current "
-            "Groq API key. Your text chat still works."
+            "Vision is not available for this Groq API key. "
+            "Please check the currently available vision models."
         )
 
-    api_messages = prepare_api_messages(messages)
+    vision_system = """
+You are Aditya AI, a helpful multimodal AI assistant.
+
+You can understand images.
+
+Carefully inspect the provided image and answer the user's
+question accurately.
+
+If text is visible, read it carefully.
+If something cannot be determined from the image, say so.
+Do not invent visual details.
+
+You are not ChatGPT.
+""".strip()
+
+    api_messages = [
+        {
+            "role": "system",
+            "content": vision_system,
+        }
+    ]
+
+    api_messages.extend(
+        prepare_messages(messages)
+    )
+
+    last_error = None
+
+    for vision_model in VISION_MODELS:
+
+        try:
+
+            response = client.chat.completions.create(
+                model=vision_model,
+                messages=api_messages,
+            )
+
+            if response.choices:
+
+                answer = (
+                    response.choices[0]
+                    .message
+                    .content
+                    or ""
+                )
+
+                if answer:
+                    return answer
+
+        except Exception as error:
+            last_error = error
+
+    if last_error:
+        raise last_error
+
+    raise RuntimeError(
+        "The vision model returned no response."
+    )
+
+
+# ============================================================
+# VOICE / WHISPER
+# ============================================================
+
+def transcribe_audio(audio_file):
+
+    audio_bytes = audio_file.getvalue()
+
+    if len(audio_bytes) > MAX_AUDIO_BYTES:
+        raise ValueError(
+            "Audio recording is too large."
+        )
+
+    last_error = None
+
+    for model in WHISPER_MODELS:
+
+        try:
+
+            stream = io.BytesIO(audio_bytes)
+
+            stream.name = (
+                getattr(
+                    audio_file,
+                    "name",
+                    None,
+                )
+                or "recording.wav"
+            )
+
+            result = client.audio.transcriptions.create(
+                file=stream,
+                model=model,
+                response_format="text",
+            )
+
+            if isinstance(result, str):
+                return result.strip()
+
+            text = getattr(
+                result,
+                "text",
+                "",
+            )
+
+            return str(text).strip()
+
+        except Exception as error:
+            last_error = error
+
+    if last_error:
+        raise last_error
+
+    return ""
+
+
+# ============================================================
+# OPTIONAL TEXT TO SPEECH
+# ============================================================
+
+def make_tts(text):
+
+    try:
+        from gtts import gTTS
+    except ImportError:
+        return None
+
+    if not text.strip():
+        return None
 
     try:
 
-        result = client.chat.completions.create(
-            model=vision_model,
-            messages=api_messages,
-            temperature=0.7,
-            max_completion_tokens=2048,
+        # gTTS works best when the response is not extremely long.
+        speech_text = text[:3000]
+
+        has_devanagari = any(
+            "\u0900" <= char <= "\u097F"
+            for char in speech_text
         )
 
-        content = result.choices[0].message.content
+        language = (
+            "hi"
+            if has_devanagari
+            else "en"
+        )
 
-        return content or ""
+        audio_buffer = io.BytesIO()
 
-    except Exception as first_error:
+        gTTS(
+            text=speech_text,
+            lang=language,
+            slow=False,
+        ).write_to_fp(audio_buffer)
 
-        # If the selected model suddenly becomes unavailable,
-        # refresh the model list and try another available
-        # vision model automatically.
+        return audio_buffer.getvalue()
 
-        try:
-            get_available_model_ids.clear()
-        except Exception:
-            pass
-
-        new_model = choose_vision_model()
-
-        if new_model and new_model != vision_model:
-
-            st.session_state.vision_model = new_model
-
-            result = client.chat.completions.create(
-                model=new_model,
-                messages=api_messages,
-                temperature=0.7,
-                max_completion_tokens=2048,
-            )
-
-            content = result.choices[0].message.content
-
-            return content or ""
-
-        raise first_error
-
-
-# ============================================================
-# REGENERATE
-# ============================================================
-
-def regenerate_last():
-
-    if not st.session_state.messages:
-        return
-
-    if (
-        st.session_state.messages[-1].get("role")
-        == "assistant"
-    ):
-        st.session_state.messages.pop()
-
-    if (
-        st.session_state.messages
-        and
-        st.session_state.messages[-1].get("role")
-        == "user"
-    ):
-
-        st.session_state.regenerate = True
-
-        st.rerun()
+    except Exception:
+        return None
 
 
 # ============================================================
@@ -838,7 +816,7 @@ with st.sidebar:
 
     st.markdown(
         '<div class="brand-sub">'
-        'Fast • Multimodal • Web-enabled'
+        'Your intelligent AI assistant'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -846,45 +824,76 @@ with st.sidebar:
     st.write("")
 
     if st.button(
-        "＋ New chat",
+        "🆕 New Chat",
         use_container_width=True,
-        key="new_chat_sidebar",
+        key="sidebar_new_chat",
     ):
-        create_new_chat()
-
-    vision_status = (
-        "Vision ready"
-        if st.session_state.vision_model
-        else "Vision unavailable"
-    )
+        new_chat()
 
     st.markdown(
-        f"""
-        <div class="sidebar-card">
-
-            <div class="status-row">
-                <span>🔥 Aditya AI</span>
-                <span class="live-pill">● LIVE</span>
-            </div>
-
-            <div style="
-                color:#888894;
-                font-size:.76rem;
-                margin-top:9px;
-                line-height:1.6;
-            ">
-                🌐 Web search<br>
-                💻 Code & calculations<br>
-                👁️ {vision_status}<br>
-                🎙️ Voice input
-            </div>
-
-        </div>
-        """,
+        '<div class="sidebar-card">',
         unsafe_allow_html=True,
     )
 
-    st.markdown("### RECENT CHATS")
+    st.markdown(
+        '<div class="status">'
+        '<span>AI Status</span>'
+        '<span class="status-good">● Online</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("### ⚙️ Model")
+
+    current_text_model = choose_model(
+        TEXT_MODELS
+    )
+
+    current_vision_model = choose_model(
+        VISION_MODELS
+    )
+
+    if current_text_model:
+
+        st.caption(
+            f"Text: `{current_text_model}`"
+        )
+
+    else:
+
+        st.warning(
+            "No text model available."
+        )
+
+    if current_vision_model:
+
+        st.caption(
+            f"Vision: `{current_vision_model}`"
+        )
+
+    else:
+
+        st.caption(
+            "Vision: unavailable"
+        )
+
+    if st.button(
+        "🔄 Refresh model access",
+        use_container_width=True,
+        key="refresh_models",
+    ):
+
+        refresh_models()
+        st.rerun()
+
+    st.markdown("---")
+
+    st.markdown("### 💬 Recent Chats")
 
     if not st.session_state.all_chats:
 
@@ -894,50 +903,58 @@ with st.sidebar:
 
     else:
 
-        items = list(
+        chats = list(
             st.session_state.all_chats.items()
         )
 
-        items.reverse()
+        chats.reverse()
 
-        for chat_id, data in items[:10]:
+        for chat_id, chat_data in chats[:10]:
 
-            if (
-                chat_id
-                == st.session_state.current_chat_id
-            ):
-                continue
+            title = get_chat_title(
+                chat_data.get(
+                    "messages",
+                    [],
+                )
+            )
 
             if st.button(
-                chat_title(data["messages"]),
-                key=f"chat_{chat_id}",
+                title,
+                key=f"history_{chat_id}",
                 use_container_width=True,
             ):
 
-                st.session_state.current_chat_id = chat_id
+                st.session_state.current_chat_id = (
+                    chat_id
+                )
 
                 st.session_state.messages = list(
-                    data["messages"]
+                    chat_data.get(
+                        "messages",
+                        [],
+                    )
                 )
 
                 st.rerun()
 
     st.markdown("---")
 
-    st.markdown("### ✨ CAPABILITIES")
+    st.markdown("### ✨ Capabilities")
 
-    st.caption("🌐 Current web information")
-    st.caption("💻 Coding & calculations")
+    st.caption("🌐 Current information")
+    st.caption("💻 Coding & programming")
+    st.caption("🧮 Mathematics")
     st.caption("👁️ Image understanding")
     st.caption("🎙️ Voice input")
-    st.caption("🔊 Optional voice replies")
-    st.caption("💬 Session chat history")
+    st.caption("💬 Chat history")
 
     st.markdown("---")
 
-    st.caption("Created by Aditya")
+    st.caption(
+        "Built with Streamlit + Groq"
+    )
 
 
 # ============================================================
-# MAIN HEADER
-# ============================================================
+# TOP HEADER
+# =====================================================
