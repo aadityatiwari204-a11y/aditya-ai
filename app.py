@@ -272,13 +272,17 @@ section[data-testid="stSidebar"] .block-container {
 # API
 # ============================================================
 
-try:
-    api_key = st.secrets["GROQ_API_KEY"]
-except Exception:
-    st.error("GROQ_API_KEY is missing. Add it under Streamlit Cloud → Settings → Secrets.")
-    st.stop()
+@st.cache_resource
+def get_groq_client():
+    try:
+        api_key = st.secrets["GROQ_API_KEY"]
+    except Exception:
+        st.error("GROQ_API_KEY is missing. Add it under Streamlit Cloud → Secrets.")
+        st.stop()
 
-client = Groq(api_key=api_key)
+    return Groq(api_key=api_key)
+
+client = get_groq_client()
 
 
 # ============================================================
