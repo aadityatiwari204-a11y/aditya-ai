@@ -2,7 +2,6 @@ import streamlit as st
 from groq import Groq
 import io
 
-# Speaking module - safe import
 try:
     from gtts import gTTS
     TTS = True
@@ -13,6 +12,7 @@ st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="centered")
 
 st.sidebar.title("🔥 Aditya AI")
 st.sidebar.markdown("Built by Aditya from Belpahar")
+st.sidebar.markdown("---")
 st.sidebar.markdown("[📝 Blog](https://aditya-ai-belpahar.blogspot.com)")
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -20,15 +20,17 @@ client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Welcome
 if not st.session_state.messages:
     with st.chat_message("assistant"):
         st.markdown("### 👋 Hi! I'm Aditya AI")
-        st.markdown("Ask in **Hindi or English** — I can chat, code & help in studies!")
+        st.markdown("Built by **Aditya from Belpahar** — Ask me anything in Hindi or English!")
 else:
     for m in st.session_state.messages:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
+# Voice Chat
 st.markdown("#### 🎙️ Voice Chat")
 voice_status = st.empty()
 voice_status.info("🎙️ Tap to speak")
@@ -40,13 +42,13 @@ if audio:
     voice_status.warning("🔴 Recording captured!")
     with st.spinner("Sun raha hu..."):
         try:
-            text = client.audio.transcriptions.create(
+            txt = client.audio.transcriptions.create(
                 file=("audio.wav", audio.getvalue(), "audio/wav"),
                 model="whisper-large-v3",
                 response_format="text",
                 language="hi"
             )
-            transcribed_text = str(text)
+            transcribed_text = str(txt)
             st.success(f"You said: {transcribed_text}")
             voice_status.empty()
         except Exception as e:
@@ -64,9 +66,15 @@ if user_input:
     with st.chat_message("assistant"):
         with st.spinner("Soch raha hu..."):
             try:
+                # THIS FIXES THE "I'M CHATGPT" PROBLEM
+                system_msg = {
+                    "role": "system",
+                    "content": "You are Aditya AI, created by Aditya from Belpahar, Odisha, India. You are NOT ChatGPT, NOT OpenAI, NOT Meta AI. You were built by Aditya. If asked who are you, say: I am Aditya AI built by Aditya from Belpahar. Answer in Hindi or English as user asks. Be friendly and helpful."
+                }
+
                 res = client.chat.completions.create(
                     model="openai/gpt-oss-20b",
-                    messages=st.session_state.messages
+                    messages=[system_msg] + st.session_state.messages
                 )
                 reply = res.choices[0].message.content
                 st.markdown(reply)
@@ -86,4 +94,4 @@ if user_input:
                 st.error(f"Error: {e}")
 
 st.markdown("---")
-st.markdown("[📝 Blog](https://aditya-ai-belpahar.blogspot.com)")
+st.markdown("[📝 aditya-ai-belpahar.blogspot.com](https://aditya-ai-belpahar.blogspot.com)")
