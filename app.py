@@ -14,9 +14,15 @@ client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-for m in st.session_state.messages:
-    with st.chat_message(m["role"]):
-        st.markdown(m["content"])
+if not st.session_state.messages:
+    with st.chat_message("assistant"):
+        st.markdown("### 👋 Hi! I'm Aditya AI")
+        st.markdown("Ask me anything in Hindi or English. I can chat, code, and help with your studies!")
+        st.markdown("*Built with 🔥 by Aditya from Belpahar*")
+else:
+    for m in st.session_state.messages:
+        with st.chat_message(m["role"]):
+            st.markdown(m["content"])
 
 # --- OFFICIAL VOICE RECORDER ---
 st.markdown("#### 🎤 Voice Chat (Hindi/English)")
