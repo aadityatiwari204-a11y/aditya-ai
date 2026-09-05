@@ -21,34 +21,84 @@ if "all_chats" not in st.session_state: st.session_state.all_chats={"chat_1":{"t
 if "current_chat_id" not in st.session_state: st.session_state.current_chat_id="chat_1"
 if "page" not in st.session_state: st.session_state.page="chat"
 
+# --- SIDEBAR ---
 with st.sidebar:
     st.markdown("## ✨ Aditya AI - Belpahar")
-    if st.button("💬 Chat"): st.session_state.page="chat"; st.rerun()
-    if st.button("📝 Blog / About"): st.session_state.page="blog"; st.rerun()
-    if st.button("🎤 Voice Chat"): st.session_state.page="voice"; st.rerun()
+    if st.button("💬 Chat", use_container_width=True):
+        st.session_state.page="chat"; st.rerun()
+    if st.button("📝 Blog / About", use_container_width=True):
+        st.session_state.page="blog"; st.rerun()
+    if st.button("🎤 Voice Chat", use_container_width=True):
+        st.session_state.page="voice"; st.rerun()
     st.divider()
-    if st.button("➕ New Chat"):
-        nid=f"chat_{uuid.uuid4().hex[:6]}"; st.session_state.current_chat_id=nid; st.session_state.messages=[]; st.session_state.all_chats[nid]={"title":"New Chat","messages":[]}; st.rerun()
+    if st.button("➕ New Chat", use_container_width=True):
+        nid=f"chat_{uuid.uuid4().hex[:6]}"; st.session_state.current_chat_id=nid; st.session_state.messages=[]; st.session_state.all_chats[nid]={"title":"New Chat","messages":[]}; st.session_state.page="chat"; st.rerun()
     st.markdown("### 📜 History")
     for cid,data in list(st.session_state.all_chats.items())[::-1][:10]:
-        if st.button(f"📝 {data['title'][:22]}", key=cid):
+        if st.button(f"📄 {data['title'][:20]}", key=cid, use_container_width=True):
             st.session_state.current_chat_id=cid; st.session_state.messages=data["messages"]; st.session_state.page="chat"; st.rerun()
 
+# --- BLOG PAGE ---
 if st.session_state.page=="blog":
-    st.markdown("# 📝 Blog - Aditya AI Belpahar")
-    st.write("Photoshop Tutorials, Editing Tricks by Aditya. Instagram: Aditya Edits Belpahar")
+    st.markdown("# 📝 Aditya Edits - Blog")
+    st.markdown("""
+    **Hey, I'm Aditya from Belpahar!** 🙏
+    Photoshop lover, Thumbnail Designer, Video Editor.
+
+    ### 🔥 What I teach:
+    - Photoshop Retouching & Manipulation
+    - Background Blur / Removal
+    - YouTube Thumbnail Design
+    - Instagram: **@aditya_edits_belpahar**
+
+    ### 📺 Latest Tutorial:
+    > How to create viral thumbnails in 2 minutes using Photoshop!
+
+    Contact: Belpahar, Odisha - DM on Insta for editing work.
+    """)
+    if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
     st.stop()
 
-st.markdown("# 🤖 Aditya AI")
+# --- VOICE PAGE ---
+if st.session_state.page=="voice":
+    st.markdown("# 🎤 Voice Chat - Hindi + English")
+    st.caption("Press mic, speak, I will reply with voice!")
+    audio = st.audio_input("Record your voice")
+    if audio:
+        with st.spinner("Sun raha hu..."):
+            try:
+                # Transcribe with Groq Whisper
+                transcription = client.audio.transcriptions.create(
+                    file=(audio.name, audio.getvalue()),
+                    model="whisper-large-v3-turbo",
+                    language="hi"
+                )
+                user_text = transcription.text
+                st.success(f"You said: {user_text}")
+                # Get AI reply
+                r = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"user","content":user_text}], max_tokens=1000)
+                ans = r.choices[0].message.content
+                st.markdown(ans.replace("<br>", " \n"))
+                # Speak back
+                lang='hi' if any('\u0900'<=c<='\u097F' for c in ans) else 'en'
+                tts=gTTS(text=ans[:400], lang=lang); b=io.BytesIO(); tts.write_to_fp(b); b.seek(0); st.audio(b, format="audio/mp3", autoplay=True)
+            except Exception as e:
+                st.error(f"Voice Error: {e}. Try Chat page, voice still works there!")
+    if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
+    st.stop()
+
+# --- CHAT PAGE ---
+st.markdown("# 😊 Aditya AI")
 st.caption("Photoshop • Editing • Design • Hindi + English Voice")
 
 c1,c2,c3,c4 = st.columns(4)
-for i, txt in enumerate(["Photoshop kya hai?", "Background blur kaise kare?", "Best editing apps?", "Thumbnail kaise banaye?"]):
+suggestions = ["Photoshop kya hai?", "Background blur kaise kare?", "Best editing apps?", "Thumbnail kaise banaye?"]
+for i, txt in enumerate(suggestions):
     with [c1,c2,c3,c4][i]:
-        if st.button(txt, key=f"s{i}"): st.session_state.sug=txt
+        if st.button(txt, key=f"s{i}"): st.session_state.sug=txt; st.rerun()
 
 for m in st.session_state.messages:
-    with st.chat_message(m["role"]): st.markdown(m["content"])
+    with st.chat_message(m["role"]): st.markdown(m["content"].replace("<br>", " \n"))
 
 inp = st.session_state.pop("sug", None) or st.chat_input("Type...")
 
@@ -66,11 +116,11 @@ if inp:
                 r=client.chat.completions.create(model="openai/gpt-oss-120b", messages=msgs, max_tokens=1500)
                 ans=r.choices[0].message.content
             except Exception as e2: ans=f"Error: {e2}"
-        ph.markdown(ans)
-        st.session_state.messages.append({"role":"assistant","content":ans})
+        ph.markdown(ans.replace("<br>", " \n"))
         try:
             lang='hi' if any('\u0900'<=c<='\u097F' for c in ans) else 'en'
             tts=gTTS(text=ans[:400], lang=lang); b=io.BytesIO(); tts.write_to_fp(b); b.seek(0); st.audio(b, format="audio/mp3")
         except: pass
+        st.session_state.messages.append({"role":"assistant","content":ans})
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"]=st.session_state.messages
     st.session_state.all_chats[st.session_state.current_chat_id]["title"]=inp[:30]
