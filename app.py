@@ -281,7 +281,7 @@ if user_input:
                         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{st.session_state.img_b64}"}}
                     ]}
                 ]
-                model_use = "meta-llama/llama-4-scout-17b-16e-instruct"
+                model_use = "qwen/qwen3.6-27b"
             else:
                 api_messages = [system_msg] + st.session_state.messages
                 model_use = "openai/gpt-oss-20b"
