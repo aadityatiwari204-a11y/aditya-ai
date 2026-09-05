@@ -10,52 +10,45 @@ except:
 
 st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="wide")
 
-# --- POLISHED APP CSS - MOBILE HEADER + NAV ---
+# --- FIXED POLISHED CSS ---
 st.markdown("""
 <style>
-    /* Hide default Streamlit header */
     header[data-testid="stHeader"] { background: transparent; }
 
-    /* Premium Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0f0f12 0%, #1a1a22 100%);
         border-right: 1px solid #2a2a35;
     }
    .sidebar-logo {
-        font-size: 28px;
-        font-weight: 800;
+        font-size: 28px; font-weight: 800;
         background: linear-gradient(90deg, #ff6a00, #ee0979);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
    .sidebar-card {
-        background: #21212a;
-        padding: 14px;
-        border-radius: 12px;
-        border: 1px solid #2f2f3d;
-        margin: 12px 0;
+        background: #21212a; padding: 14px; border-radius: 12px;
+        border: 1px solid #2f2f3d; margin: 12px 0;
     }
    .sidebar-link {
         display: block; padding: 10px 14px;
         background: #2a2a38; border-radius: 8px;
         color: white!important; text-decoration: none; margin: 6px 0;
     }
+   .sidebar-link:hover { background: #3a3a4d; }
 
-    /* MOBILE POLISHED HEADER */
+    /* MOBILE HEADER - FIXED NO OVERLAP */
     @media (max-width: 768px) {
        .mobile-top-bar {
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 56px;
-            background: rgba(15,15,18,0.85);
+            background: rgba(15,15,18,0.92);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid #2a2a35;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            z-index: 9999;
+            padding-left: 52px; /* Leave space for Streamlit's ☰ button */
+            z-index: 999;
         }
        .mobile-logo {
             font-weight: 800; font-size: 18px;
@@ -63,62 +56,49 @@ st.markdown("""
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-       .mobile-badge {
-            font-size: 10px;
-            background: #ff6a0020;
-            color: #ff8a33;
-            padding: 4px 8px;
-            border-radius: 20px;
-            border: 1px solid #ff6a0030;
-        }
-        /* Push content down */
-       .block-container { padding-top: 75px!important; }
-
-        /* Chat input like ChatGPT */
+       .block-container { padding-top: 70px!important; }
         [data-testid="stChatInput"] {
-            background: #1e1e26;
-            border-radius: 20px;
-            border: 1px solid #3a3a4d;
+            background: #1e1e26; border-radius: 20px; border: 1px solid #3a3a4d;
         }
     }
     @media (min-width: 769px) {
        .mobile-top-bar { display: none; }
     }
-
-    /* Chat bubbles polished */
-    [data-testid="stChatMessage"] {
-        background: #1c1c24;
-        border-radius: 16px;
-        border: 1px solid #2a2a35;
-        padding: 12px;
-    }
 </style>
 
-<!-- MOBILE HEADER -->
 <div class="mobile-top-bar">
     <div class="mobile-logo">🔥 Aditya AI</div>
-    <div class="mobile-badge">● LIVE • Belpahar</div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR ---
+# --- SIDEBAR = YOUR MENU (☰) ---
 with st.sidebar:
     st.markdown('<div class="sidebar-logo">🔥 Aditya AI</div>', unsafe_allow_html=True)
     st.caption("Next-Gen Voice AI")
+    
+    # This is now INSIDE menu, not overlapping on top
+    st.markdown("""
+    <div class="sidebar-card" style="display:flex; justify-content:space-between; align-items:center">
+        <span style="font-size:13px">📍 Belpahar, Odisha</span>
+        <span style="font-size:10px; background:#00ff8820; color:#00ff88; padding:4px 8px; border-radius:20px; border:1px solid #00ff8830;">● LIVE</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("""
     <div class="sidebar-card">
         <b>👨‍💻 Creator</b><br>
-        <span style='color:#aaa; font-size:13px'>Aditya from Belpahar, Odisha<br>Student • Developer • Dreamer</span>
+        <span style='color:#aaa; font-size:13px'>Aditya from Belpahar<br>Student • Developer • Dreamer</span>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("**✨ Features**\n- 🎙️ Hindi & English Voice\n- 🧠 Super Fast Groq AI\n- 🔊 Speaks Back\n- 💬 Remembers Chat")
-    st.markdown("---")
-    st.markdown("**🔗 Connect**")
-    st.markdown('<a class="sidebar-link" href="https://aditya-ai-belpahar.blogspot.com" target="_blank">📝 My Blog</a>', unsafe_allow_html=True)
-    st.markdown('<a class="sidebar-link" href="https://github.com" target="_blank">💻 GitHub</a>', unsafe_allow_html=True)
-    st.markdown("<br><div class='sidebar-card' style='text-align:center; font-size:12px; color:#888'>Made with ❤️ in Belpahar<br>v2.0 • 2026</div>", unsafe_allow_html=True)
 
-# --- MAIN LOGIC ---
+    st.markdown("**☰ Menu**")
+    st.markdown('<a class="sidebar-link" href="https://aditya-ai-belpahar.blogspot.com" target="_blank">📝 My Blog</a>', unsafe_allow_html=True)
+    st.markdown('<a class="sidebar-link" href="https://github.com" target="_blank">⭐ Fork on GitHub</a>', unsafe_allow_html=True)
+    st.markdown('<a class="sidebar-link" href="#" target="_blank">📍 Belpahar • LIVE Status</a>', unsafe_allow_html=True)
+
+    st.markdown("<br><div class='sidebar-card' style='text-align:center; font-size:12px; color:#888'>Made with ❤️ in Belpahar<br>v2.0</div>", unsafe_allow_html=True)
+
+# --- MAIN ---
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -155,18 +135,4 @@ if user_input:
     with st.chat_message("assistant"):
         with st.spinner("Soch raha hu..."):
             try:
-                system_msg = {"role": "system", "content": "You are Aditya AI, created by Aditya from Belpahar. NOT ChatGPT. Say you are Aditya AI."}
-                res = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[system_msg] + st.session_state.messages)
-                reply = res.choices[0].message.content
-                st.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
-                if TTS:
-                    try:
-                        lang = 'hi' if any('\u0900' <= c <= '\u097F' for c in reply) else 'en'
-                        tts = gTTS(text=reply[:500], lang=lang)
-                        fp = io.BytesIO(); tts.write_to_fp(fp); fp.seek(0)
-                        st.audio(fp, format="audio/mp3", autoplay=True)
-                    except:
-                        pass
-            except Exception as e:
-                st.error(f"Error: {e}")
+               
