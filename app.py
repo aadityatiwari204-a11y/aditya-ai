@@ -115,7 +115,7 @@ if not st.session_state.messages:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="try-label">🚀 Try something</div>', unsafe_allow_html=True)
-    c1, c2 = st.columns(1)
+    c1 = st.columns(1)[0]
     if st.button("💡 What can you do?", use_container_width=True, key="t1"):
         st.session_state.pending_prompt="What can you do?"; st.rerun()
     if st.button("💻 Help me with Python", use_container_width=True, key="t2"):
