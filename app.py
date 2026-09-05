@@ -96,7 +96,7 @@ if final_input:
             full=r.choices[0].message.content; ph.markdown(full)
         except:
             try:
-                r=client.chat.completions.create(model="llama-3.1-8b-instant", messages=msgs, max_tokens=2000)
+                r=client.chat.completions.create(model="gemma2-9b-it", messages=msgs, max_tokens=2000)
                 full=r.choices[0].message.content; ph.markdown(full)
             except Exception as e2: full=f"Server busy: {e2}"; ph.markdown(full)
         st.session_state.messages.append({"role":"assistant","content":full})
