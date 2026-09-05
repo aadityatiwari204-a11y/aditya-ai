@@ -79,7 +79,7 @@ if st.session_state.page=="voice":
                 user_text = transcription.text
                 st.success(f"You said: {user_text}")
                 # Get AI reply
-                r = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"user","content":user_text}], max_tokens=1000)
+                r = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"system","content":"You are Aditya AI, created by Aditya from Belpahar. You are NOT ChatGPT, NOT OpenAI!"},{"role":"user","content":user_text}], max_tokens=1000)
                 ans = r.choices[0].message.content
                 st.markdown(ans.replace("<br>", " \n"))
                 # Speak back
@@ -111,7 +111,8 @@ if inp:
     with st.chat_message("assistant"):
         ph=st.empty()
         try:
-            msgs=[{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
+            system_prompt = {"role":"system","content":"You are Aditya AI, created by Aditya from Belpahar, Odisha. You are NOT ChatGPT, NOT OpenAI. You are Aditya AI - Belpahar. Always say you are Aditya AI made by Aditya. You help with Photoshop, editing, Hindi+English. Never say OpenAI or ChatGPT. If asked who are you, say: I am Aditya AI, made by Aditya from Belpahar!"}
+msgs=[system_prompt] + [{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
             r=client.chat.completions.create(model="openai/gpt-oss-20b", messages=msgs, max_tokens=1500)
             ans=r.choices[0].message.content
         except Exception as e:
