@@ -6,7 +6,7 @@ st.set_page_config(page_title="Aditya AI", page_icon="🔥")
 st.title("🔥 Aditya AI - Built by Aditya from Belpahar")
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-SYSTEM_PROMPT = "You are Aditya AI, built by Aditya from Belpahar, Odisha, India. You are 80% as powerful as GPT-4o. Be helpful, friendly, answer in English/Hindi. Keep answers short for voice."
+SYSTEM_PROMPT = "You are Aditya AI, built by Aditya from Belpahar, Odisha. You are 80% as powerful as GPT-4o. Be helpful, short answer for voice."
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -14,86 +14,83 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
-        # 🔊 Speak button for each AI answer
-        if msg["role"] == "assistant":
-            safe_text = msg["content"].replace("'", "").replace('"', '').replace("\n", " ")[:400]
-            components.html(f"""
-                <button onclick="var u = new SpeechSynthesisUtterance('{safe_text}'); u.lang='en-IN'; u.rate=1; speechSynthesis.speak(u);"
-                style="background:#4ECDC4;color:white;padding:5px 12px;border:none;border-radius:15px;font-size:12px;cursor:pointer;margin-top:5px;">
-                🔊 Play Voice
-                </button>
-            """, height=40)
 
-# --- VOICE INPUT BUTTON ---
+# VOICE INPUT - SUPER AUTO SEND
 voice_html = """
+<div id="status" style="text-align:center;color:gray;font-size:13px;margin:8px;">Tap mic and speak</div>
+<button onclick="startVoice()" id="micBtn" style="background: linear-gradient(90deg, #FF4B4B, #FF8E53);color:white;padding:12px;border:none;border-radius:25px;font-weight:bold;width:100%;cursor:pointer;font-size:16px;">
+🎤 Tap to Speak
+</button>
 <script>
+var lastText = "";
 function startVoice(){
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ alert("Use Chrome browser for voice"); return; }
+  if(!SR){ alert("Use Chrome!"); return; }
   var r = new SR();
   r.lang = 'en-IN';
   r.start();
-  document.getElementById('v').innerHTML = "🎧 Listening... Speak now!";
+  document.getElementById('status').innerHTML = "🎧 Listening...";
+  document.getElementById('micBtn').innerHTML = "🎧 Listening... Speak now!";
   r.onresult = function(e){
     var t = e.results[0][0].transcript;
-    document.getElementById('v').innerHTML = "✅ Said: "+t;
-    var input = window.parent.document.querySelector('textarea[data-testid="stChatInputTextArea"]');
-    if(input){
-      input.value = t;
-      input.dispatchEvent(new Event('input', {bubbles:true}));
-      input.focus();
-    }
+    lastText = t;
+    document.getElementById('status').innerHTML = "✅ You said: " + t + " - Sending...";
+    // AUTO COPY + AUTO CLICK SEND
+    setTimeout(function(){
+      var doc = window.parent.document;
+      var ta = doc.querySelector('textarea[data-testid="stChatInputTextArea"]');
+      if(ta){
+        ta.value = t;
+        ta.dispatchEvent(new Event('input', {bubbles:true}));
+        ta.focus();
+        setTimeout(function(){
+          var btn = doc.querySelector('button[data-testid="stChatInputSubmitButton"]');
+          if(btn){ btn.click(); }
+        }, 500);
+      }
+    }, 300);
   };
-  r.onerror = function(e){
-    document.getElementById('v').innerHTML = "❌ Mic error: "+e.error+" - Try again";
+  r.onend = function(){
+    document.getElementById('micBtn').innerHTML = "🎤 Tap to Speak";
   }
 }
-function stopAllVoice(){
-  speechSynthesis.cancel();
-  document.getElementById('v').innerHTML = "🔇 Voice stopped";
-}
 </script>
-<button onclick="startVoice()" style="background: linear-gradient(90deg, #FF4B4B, #FF8E53);color:white;padding:12px 20px;border:none;border-radius:25px;font-weight:bold;width:100%;cursor:pointer;font-size:16px;">
-🎤 Tap to Speak (Hindi/English)
-</button>
-<button onclick="stopAllVoice()" style="background:#333;color:white;padding:6px 15px;border:none;border-radius:15px;font-size:11px;cursor:pointer;margin-top:6px;width:100%;">🔇 Stop Voice</button>
-<p id="v" style="text-align:center;font-size:13px;color:gray;margin-top:8px;">Tap & speak - AI will auto-type + talk back!</p>
 """
-components.html(voice_html, height=115)
+components.html(voice_html, height=95)
 
-if prompt := st.chat_input("Ask Aditya AI anything... or use voice button"):
+prompt = st.chat_input("Ask anything...")
+
+# Check if voice text came
+if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         try:
-            response = client.chat.completions.create(
+            resp = client.chat.completions.create(
                 model="openai/gpt-oss-20b",
                 messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages
             )
-            answer = response.choices[0].message.content
-            st.markdown(answer)
-            st.session_state.messages.append({"role": "assistant", "content": answer})
+            ans = resp.choices[0].message.content
+            st.markdown(ans)
+            st.session_state.messages.append({"role": "assistant", "content": ans})
 
-            # AUTO SPEAK the answer
-            safe_answer = answer.replace("'", "").replace('"', '').replace("\n", " ")[:500]
+            # AUTO SPEAK + REPLAY BUTTON
+            safe = ans.replace("'", " ").replace('"', " ").replace("\n"," ")[:600]
             components.html(f"""
                 <script>
-                var utter = new SpeechSynthesisUtterance('{safe_answer}');
-                utter.lang = 'en-IN';
-                utter.rate = 0.95;
                 speechSynthesis.cancel();
-                speechSynthesis.speak(utter);
+                var u = new SpeechSynthesisUtterance("{safe}");
+                u.lang = 'en-IN'; u.rate = 0.95;
+                speechSynthesis.speak(u);
                 </script>
-                <button onclick="var u = new SpeechSynthesisUtterance('{safe_answer}'); u.lang='en-IN'; speechSynthesis.cancel(); speechSynthesis.speak(u);"
-                style="background:#4ECDC4;color:white;padding:8px 15px;border:none;border-radius:20px;cursor:pointer;">🔊 Replay Voice</button>
-            """, height=50)
-
+                <button onclick='var x=new SpeechSynthesisUtterance("{safe}");x.lang="en-IN";speechSynthesis.cancel();speechSynthesis.speak(x);'
+                style='background:#4ECDC4;color:white;padding:8px 15px;border:none;border-radius:20px;'>🔊 Replay</button>
+                <button onclick='speechSynthesis.cancel()' style='background:#333;color:white;padding:8px 15px;border:none;border-radius:20px;margin-left:5px;'>🔇 Stop</button>
+            """, height=60)
         except Exception as e:
             st.error(f"Error: {e}")
 
 st.markdown("---")
-st.markdown("### 📚 Support Aditya AI - Visit Our Blog")
-st.link_button("🔗 Visit Official Blog - aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
-st.caption("Built by Aditya from Belpahar, Odisha ❤️ | Voice AI Enabled")
+st.link_button("🔗 Visit Blog - aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
