@@ -250,32 +250,35 @@ if img_file is not None:
             st.rerun()
 else:
     st.caption("Supports JPG, PNG, WEBP • Max 200MB")
+# --- WHATSAPP MIX BAR (Typing + Mic inside) ---
+col_text, col_mic = st.columns([5,1], vertical_alignment="bottom")
+with col_text:
+    wa_text = st.text_input("wa_input", placeholder="Ask anything... 💬", label_visibility="collapsed", key="wa_box")
+with col_mic:
+    audio = st.audio_input(" ", label_visibility="collapsed")
 
-st.markdown("#### 🎙️ Voice Chat")
-st.markdown('<div class="voice-sub">Tap the microphone to start speaking</div>', unsafe_allow_html=True)
-audio = st.audio_input("Record")
 transcribed_text = None
 if audio:
-    ph = st.empty()
-    ph.markdown('<div style="color:#ff5555; font-size:13px">🔴 Recording captured — transcribing...</div>', unsafe_allow_html=True)
     try:
-        txt = client.audio.transcriptions.create(
-            file=("audio.wav", audio.getvalue(), "audio/wav"),
-            model="whisper-large-v3", response_format="text", language="hi"
-        )
+        txt = client.audio.transcriptions.create(file=("audio.wav", audio.getvalue(), "audio/wav"), model="whisper-large-v3", response_format="text", language="hi")
         transcribed_text = str(txt)
-        ph.empty()
-        st.success(f"🎤 You said: {transcribed_text}")
+        st.toast(f"🎤 {transcribed_text}")
     except Exception as e:
-        ph.empty()
         st.error(f"Voice Error: {e}")
 
-user_input = st.chat_input("🎙️ Ask anything... or use mic above ↑")
+user_input = None
+if wa_text:
+    user_input = wa_text
+    st.session_state["wa_box"] = ""
 if st.session_state.pending_prompt:
     user_input = st.session_state.pending_prompt
     st.session_state.pending_prompt = None
 if transcribed_text:
     user_input = transcribed_text
+
+fb = st.chat_input("Ask anything...") # backup enter
+if fb:
+    user_input = fb
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
