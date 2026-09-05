@@ -47,3 +47,8 @@ if prompt := st.chat_input("Ask Aditya AI anything..."):
             st.session_state.messages.append({"role": "assistant", "content": answer})
         except Exception as e:
             st.error(f"Error: {e}")
+# --- BLOG LINK FOR EARNING ---
+st.markdown("---")
+st.markdown("### 📚 Support Aditya AI - Visit Our Blog")
+st.link_button("🔗 Visit Official Blog - aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
+st.caption("Built by Aditya from Belpahar, Odisha ❤️")
