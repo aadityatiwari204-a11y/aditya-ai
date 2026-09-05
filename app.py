@@ -1278,5 +1278,7 @@ if not st.session_state.messages:
             key="quick_1"
         ):
 
-            st.session_state.pending_prompt = (
-                "What
+           st.session_state.pending_prompt = (
+    "What can you do?"
+)
+st.rerun()
