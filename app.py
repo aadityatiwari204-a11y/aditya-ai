@@ -3,12 +3,14 @@ from groq import Groq
 
 st.set_page_config(page_title="Aditya AI | Built by Aditya", page_icon="🔥")
 
-# FOR GOOGLE VERIFICATION & SEO + ADSENSE
-st.markdown("""
+# FOR GOOGLE VERIFICATION & SEO + ADSENSE - FIXED
+import streamlit.components.v1 as components
+components.html("""
 <meta name="google-site-verification" content="QIBGITDr0YjVialLuM" />
-<meta name="description" content="Aditya AI is a free AI assistant built By Aditya from Belpahar, Odisha. 80% as powerful as GPT-4o." />
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6146742303875365" crossorigin="anonymous"></script>
-""", unsafe_allow_html=True)
+""", height=0)
+
+st.markdown('<meta name="description" content="Aditya AI is a free AI assistant built By Aditya from Belpahar, Odisha. 80% as powerful as GPT-4o." />', unsafe_allow_html=True)
 st.title("🔥 Aditya AI - Built by Aditya from Belpahar | 80% as powerful as GPT-4o")
 
 # Get API key from Streamlit Secrets
