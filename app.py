@@ -216,15 +216,40 @@ else:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
-# --- IMAGE UPLOAD ADDED ---
-st.markdown("#### 📷 Send Image + Ask")
-st.markdown('<div class="voice-sub">Upload an image and ask about it</div>', unsafe_allow_html=True)
-img_file = st.file_uploader("Upload image", type=["jpg","jpeg","png","webp"], label_visibility="collapsed")
+# --- PREMIUM IMAGE UPLOAD ---
+st.markdown("""
+<style>
+.img-card {
+  background: linear-gradient(135deg, #1e1e26, #21212a);
+  border: 1px dashed #3a3a4a; border-radius: 16px;
+  padding: 16px; transition: all 0.3s ease;
+}
+.img-card:hover { border-color: #ff6a00; background: #252530; }
+.upload-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: #888; margin-bottom: 10px; }
+</style>
+<div class="img-card">
+  <div class="upload-title">📷 Send Image + Ask AI</div>
+  <div class="upload-sub">Drop a photo and ask anything about it — powered by vision AI</div>
+</div>
+""", unsafe_allow_html=True)
+
+img_file = st.file_uploader(" ", type=["jpg","jpeg","png","webp"], label_visibility="collapsed")
+
 if img_file is not None:
     b64 = base64.b64encode(img_file.getvalue()).decode("utf-8")
     st.session_state.img_b64 = b64
-    st.image(img_file, width=250)
-    st.success("Image ready! Ask below.")
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        st.image(img_file, use_container_width=True)
+    with c2:
+        st.success("✅ Image loaded")
+        st.caption(f"📁 {img_file.name} • {round(len(img_file.getvalue())/1024)} KB")
+        if st.button("❌ Remove image"):
+            st.session_state.img_b64 = None
+            st.rerun()
+else:
+    st.caption("Supports JPG, PNG, WEBP • Max 200MB")
 
 st.markdown("#### 🎙️ Voice Chat")
 st.markdown('<div class="voice-sub">Tap the microphone to start speaking</div>', unsafe_allow_html=True)
