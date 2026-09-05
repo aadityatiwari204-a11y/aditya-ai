@@ -40,21 +40,24 @@ with st.sidebar:
 
 # --- BLOG PAGE ---
 if st.session_state.page=="blog":
-    st.markdown("# 📝 Aditya Edits - Blog")
+    st.markdown("# 🧑‍💻 Aditya - Belpahar")
     st.markdown("""
-    **Hey, I'm Aditya from Belpahar!** 🙏
-    Photoshop lover, Thumbnail Designer, Video Editor.
-
-    ### 🔥 What I teach:
-    - Photoshop Retouching & Manipulation
-    - Background Blur / Removal
-    - YouTube Thumbnail Design
-    - Instagram: **@aditya_edits_belpahar**
-
-    ### 📺 Latest Tutorial:
-    > How to create viral thumbnails in 2 minutes using Photoshop!
-
-    Contact: Belpahar, Odisha - DM on Insta for editing work.
+    **Hey, I'm Aditya from Belpahar, Odisha!** 🙏
+    
+    I love making cool things with AI & Photoshop.
+    
+    ### 🔥 About This AI:
+    This is my own AI chatbot - Aditya AI, made with Python + Groq AI.
+    - You can chat in Hindi & English
+    - Voice chat support
+    - Photoshop & Editing help
+    
+    ### 💡 Why I built it:
+    To learn AI and help friends in Belpahar with editing & study doubts.
+    
+    No Instagram / YouTube yet - this website is my first project!
+    
+    **Location: Belpahar, Jharsuguda, Odisha**
     """)
     if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
     st.stop()
