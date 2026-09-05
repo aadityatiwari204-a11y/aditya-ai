@@ -242,18 +242,32 @@ if img_file is not None:
     c1, c2 = st.columns([1, 2])
     with c1:
         st.image(img_file, use_container_width=True)
-    with c2:
+   # --- IMAGE UPLOAD PREMIUM ---
+st.markdown("""
+<style>
+.img-card{ background:#1e1e26; border:1px dashed #3a3a4a; border-radius:16px; padding:14px; }
+[data-testid="stTextInput"] input{ border-radius:24px !important; height:48px !important; background:#252530 !important; }
+</style>
+<div class="img-card">📷 <b>Send Image + Ask AI</b><br><span style="font-size:12px;color:#888">Drop a photo and ask anything about it — powered by vision AI</span></div>
+""", unsafe_allow_html=True)
+
+img_file = st.file_uploader(" ", type=["jpg","jpeg","png","webp"], label_visibility="collapsed")
+if img_file is not None:
+    b64 = base64.b64encode(img_file.getvalue()).decode("utf-8")
+    st.session_state.img_b64 = b64
+    c1,c2 = st.columns([1,2])
+    with c1: st.image(img_file, use_container_width=True)
+    with c2: 
         st.success("✅ Image loaded")
-        st.caption(f"📁 {img_file.name} • {round(len(img_file.getvalue())/1024)} KB")
-        if st.button("❌ Remove image"):
+        if st.button("❌ Remove"): 
             st.session_state.img_b64 = None
             st.rerun()
-else:
-    st.caption("Supports JPG, PNG, WEBP • Max 200MB")
-# --- WHATSAPP MIX BAR (Typing + Mic inside) ---
-col_text, col_mic = st.columns([5,1], vertical_alignment="bottom")
+
+# --- WHATSAPP SINGLE BAR ---
+st.markdown("<br>", unsafe_allow_html=True)
+col_text, col_mic = st.columns([6,1], vertical_alignment="bottom")
 with col_text:
-    wa_text = st.text_input("wa_input", placeholder="Ask anything... 💬", label_visibility="collapsed", key="wa_box")
+    wa_text = st.text_input("wa_final", placeholder="Ask anything... 💬", label_visibility="collapsed", key="wa_final")
 with col_mic:
     audio = st.audio_input(" ", label_visibility="collapsed")
 
@@ -267,69 +281,8 @@ if audio:
         st.error(f"Voice Error: {e}")
 
 user_input = None
-if wa_text:
-    user_input = wa_text
-    st.session_state["wa_box"] = ""
+if wa_text: user_input = wa_text
 if st.session_state.pending_prompt:
     user_input = st.session_state.pending_prompt
     st.session_state.pending_prompt = None
-if transcribed_text:
-    user_input = transcribed_text
-
-fb = st.chat_input("Ask anything...") # backup enter
-if fb:
-    user_input = fb
-
-if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    if len(st.session_state.messages) == 1:
-        st.session_state.all_chats[st.session_state.current_chat_id]["title"] = user_input[:35]
-    with st.chat_message("user"):
-        st.markdown(user_input)
-        if st.session_state.img_b64:
-            st.image(f"data:image/jpeg;base64,{st.session_state.img_b64}", width=250)
-    with st.chat_message("assistant"):
-        thinking_placeholder = st.empty()
-        thinking_placeholder.markdown('''
-        <div class="thinking-wrap">
-            <div class="thinking-avatar">🔥</div>
-            <div>
-                <div class="shimmer-text">Aditya AI is thinking...</div>
-                <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-            </div>
-        </div>
-        ''', unsafe_allow_html=True)
-        try:
-            system_msg = {"role": "system", "content": "You are Aditya AI, created by Aditya from Belpahar, Odisha. NOT ChatGPT."}
-            if st.session_state.img_b64:
-                api_messages = [
-                    system_msg,
-                    {"role": "user", "content": [
-                        {"type": "text", "text": user_input},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{st.session_state.img_b64}"}}
-                    ]}
-                ]
-                model_use = "qwen/qwen3.6-27b"
-            else:
-                api_messages = [system_msg] + st.session_state.messages
-                model_use = "openai/gpt-oss-20b"
-            res = client.chat.completions.create(model=model_use, messages=api_messages)
-            reply = res.choices[0].message.content
-            thinking_placeholder.empty()
-            st.markdown(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
-            st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = st.session_state.messages
-            st.session_state.img_b64 = None
-            if TTS:
-                try:
-                    lang_code = 'hi' if any('\u0900' <= c <= '\u097F' for c in reply) else 'en'
-                    tts = gTTS(text=reply[:500], lang=lang_code)
-                    fp = io.BytesIO()
-                    tts.write_to_fp(fp)
-                    fp.seek(0)
-                    st.audio(fp, format="audio/mp3", autoplay=True)
-                except:
-                    pass
-        except Exception as e:
-            thinking_placeholder.empty()
-            st.error(f"Error: {e}")
+if transcribed_text: user_input = transcribed_text
