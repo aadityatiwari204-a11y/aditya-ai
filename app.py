@@ -605,10 +605,24 @@ if audio_input is not None:
                 st.session_state.last_audio_hash = audio_hash
                 if voice_prompt:
                     st.info(f"🎙️ I heard: {voice_prompt}")
-            except Exception as exc:
-                st.error("I couldn't transcribe that recording.")
+                        except Exception as exc:
+                st.error("Aditya AI couldn't generate a response.")
                 with st.expander("Technical details"):
                     st.code(str(exc))
+                st.stop()
+            
+            # Save assistant message
+            audio_data = make_tts(answer)
+            assistant_msg = {"role": "assistant", "content": answer}
+            if audio_data:
+                assistant_msg["audio"] = audio_data
+            
+            st.session_state.messages.append(assistant_msg)
+            sync_chat()
+            st.markdown(answer)
+            if audio_data:
+                st.audio(audio_data, format="audio/mp3")
+            st.rerun()
 
 
 # ============================================================
