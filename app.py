@@ -1,6 +1,8 @@
 import streamlit as st
 from groq import Groq
 import uuid
+from gtts import gTTS
+import io
 
 st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="wide")
 
