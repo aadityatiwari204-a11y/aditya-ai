@@ -10,6 +10,7 @@ except:
 
 st.set_page_config(page_title="Aditya AI", page_icon="🔥", layout="wide")
 
+# --- TOTAL POLISHED UI + ANIMATIONS ---
 st.markdown("""
 <style>
     header[data-testid="stHeader"] { background: transparent; }
@@ -17,70 +18,76 @@ st.markdown("""
         background: linear-gradient(180deg, #0f0f12 0%, #1a1a22 100%);
         border-right: 1px solid #2a2a35;
     }
-.sidebar-logo {
+   .sidebar-logo {
         font-size: 28px; font-weight: 800;
         background: linear-gradient(90deg, #ff6a00, #ee0979);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-.sidebar-card {
+   .sidebar-card {
         background: #21212a; padding: 14px; border-radius: 12px;
         border: 1px solid #2f2f3d; margin: 12px 0;
     }
-.sidebar-link {
+   .sidebar-link {
         display: block; padding: 10px 14px; background: #2a2a38;
         border-radius: 8px; color: white!important; text-decoration: none; margin: 6px 0;
     }
+   .sidebar-link:hover { background: #3a3a4d; }
 
+    /* MOBILE HEADER - NO OVERLAP */
     @media (max-width: 768px) {
-    .mobile-top-bar {
+       .mobile-top-bar {
             position: fixed; top: 0; left: 0; right: 0; height: 56px;
             background: rgba(15,15,18,0.92); backdrop-filter: blur(12px);
             border-bottom: 1px solid #2a2a35;
             display: flex; align-items: center; padding-left: 52px; z-index: 999;
         }
-    .mobile-logo {
+       .mobile-logo {
             font-weight: 800; font-size: 18px;
             background: linear-gradient(90deg, #ff6a00, #ee0979);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-    .block-container { padding-top: 70px!important; }
+       .block-container { padding-top: 70px!important; }
+        div[data-testid="stHorizontalBlock"] { gap: 8px!important; }
+        [data-testid="stColumn"] {
+            width: calc(50% - 4px)!important;
+            flex: 1 1 calc(50% - 4px)!important;
+            min-width: calc(50% - 4px)!important;
+        }
     }
     @media (min-width: 769px) {.mobile-top-bar { display: none; } }
 
-    /* Compact suggestion buttons */
+    /* 2x2 COMPACT CARDS */
     div[data-testid="stButton"] > button {
-        font-size: 13px!important;
-        padding: 8px 10px!important;
-        border-radius: 10px!important;
-        background: #1e1e26!important;
-        border: 1px solid #2f2f3d!important;
-        color: #ddd!important;
-        height: 38px!important;
-        white-space: nowrap;
+        font-size: 12.5px!important; padding: 0 10px!important;
+        border-radius: 12px!important; background: #1e1e26!important;
+        border: 1px solid #2a2a35!important; color: #ccc!important;
+        height: 42px!important; min-height: 42px!important;
+        transition: all 0.2s ease; white-space: nowrap;
     }
     div[data-testid="stButton"] > button:hover {
-        background: #2a2a38!important;
-        border-color: #ff6a00!important;
-        transform: translateY(-1px);
+        background: #2a2a38!important; border-color: #ff6a00!important;
+        color: white!important; transform: translateY(-1px);
     }
-.thinking-wrap {
+
+    /* THINKING ANIMATION */
+   .thinking-wrap {
         display: flex; align-items: center; gap: 12px;
         background: #1c1c24; border: 1px solid #2a2a35;
         padding: 14px 18px; border-radius: 16px; width: fit-content;
     }
-.thinking-avatar {
+   .thinking-avatar {
         width: 32px; height: 32px; border-radius: 50%;
         background: linear-gradient(135deg, #ff6a00, #ee0979);
         display: flex; align-items: center; justify-content: center;
         animation: pulseGlow 2s infinite;
     }
-.dots { display: flex; gap: 4px; }
-.dot {
+   .dots { display: flex; gap: 4px; }
+   .dot {
         width: 6px; height: 6px; border-radius: 50%;
         background: #ff6a00; animation: bounceDot 1.4s infinite;
     }
-.dot:nth-child(2) { animation-delay: 0.2s; background: #ff8a33; }
-.dot:nth-child(3) { animation-delay: 0.4s; background: #ee0979; }
+   .dot:nth-child(2) { animation-delay: 0.2s; background: #ff8a33; }
+   .dot:nth-child(3) { animation-delay: 0.4s; background: #ee0979; }
     @keyframes bounceDot {
         0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
         40% { transform: translateY(-6px); opacity: 1; }
@@ -90,26 +97,29 @@ st.markdown("""
         70% { box-shadow: 0 0 0 10px rgba(255,106,0,0); }
         100% { box-shadow: 0 0 0 0 rgba(255,106,0,0); }
     }
-.shimmer-text {
+   .shimmer-text {
         background: linear-gradient(90deg, #888 0%, #fff 50%, #888 100%);
-        background-size: 200% 100%;
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-size: 200% 100%; -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         animation: shimmer 1.5s infinite linear; font-size: 13px;
     }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-.ready-dot {
+
+   .ready-dot {
         display: flex; align-items: center; gap: 6px;
-        font-size: 12px; color: #00ff88; margin-top: 6px;
+        font-size: 11px; color: #00ff88; margin: 6px 0 4px 2px;
     }
-.ready-dot span {
+   .ready-dot span {
         width: 6px; height: 6px; background: #00ff88; border-radius: 50%;
-        display: inline-block; animation: pulseGlow 2s infinite;
+        display: inline-block; box-shadow: 0 0 8px #00ff88;
+        animation: pulseGlow 2s infinite;
     }
-.voice-sub { font-size: 12px; color: #888; margin-bottom: 8px; }
+   .voice-sub { font-size: 12px; color: #888; margin-bottom: 8px; }
 </style>
 <div class="mobile-top-bar"><div class="mobile-logo">🔥 Aditya AI</div></div>
 """, unsafe_allow_html=True)
 
+# SIDEBAR = ☰ MENU
 with st.sidebar:
     st.markdown('<div class="sidebar-logo">🔥 Aditya AI</div>', unsafe_allow_html=True)
     st.caption("Next-Gen Voice AI")
@@ -120,12 +130,13 @@ with st.sidebar:
     </div>
     <div class="sidebar-card">
         <b>👨‍💻 Creator</b><br>
-        <span style='color:#aaa; font-size:13px'>Aditya from Belpahar</span>
+        <span style='color:#aaa; font-size:13px'>Aditya from Belpahar<br>Student • Developer • Dreamer</span>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("**☰ Menu**")
     st.markdown('<a class="sidebar-link" href="https://aditya-ai-belpahar.blogspot.com" target="_blank">📝 My Blog</a>', unsafe_allow_html=True)
     st.markdown('<a class="sidebar-link" href="https://github.com" target="_blank">⭐ Fork on GitHub</a>', unsafe_allow_html=True)
+    st.markdown('<a class="sidebar-link" href="#">📍 Belpahar • LIVE Status</a>', unsafe_allow_html=True)
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
@@ -134,29 +145,29 @@ if "messages" not in st.session_state:
 if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 
-# 1 & 2 & 5 - COMPACT 2x2 + AI READY + AUTO SEND
+# WELCOME + 2x2 COMPACT GRID + READY STATUS
 if not st.session_state.messages:
     with st.chat_message("assistant"):
         st.markdown("### 👋 Hi! I'm Aditya AI")
-        st.markdown("Built by **Aditya from Belpahar**")
         st.markdown('<div class="ready-dot"><span></span> Aditya AI is ready</div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.caption("Built by Aditya from Belpahar — Try one below")
 
-        c1, c2 = st.columns(2)
-        with c1:
+        r1c1, r1c2 = st.columns(2, gap="small")
+        with r1c1:
             if st.button("💡 What can you do?", use_container_width=True, key="s1"):
                 st.session_state.pending_prompt = "What can you do?"
                 st.rerun()
-        with c2:
+        with r1c2:
             if st.button("💻 Python help", use_container_width=True, key="s2"):
                 st.session_state.pending_prompt = "Help me write Python code"
                 st.rerun()
-        c3, c4 = st.columns(2)
-        with c3:
+
+        r2c1, r2c2 = st.columns(2, gap="small")
+        with r2c1:
             if st.button("🌐 Today's news", use_container_width=True, key="s3"):
                 st.session_state.pending_prompt = "Tell me today's news"
                 st.rerun()
-        with c4:
+        with r2c2:
             if st.button("🧠 Explain physics", use_container_width=True, key="s4"):
                 st.session_state.pending_prompt = "Explain quantum physics simply"
                 st.rerun()
@@ -165,19 +176,22 @@ else:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
-# 3 - IMPROVED VOICE SECTION
+# VOICE SECTION - IMPROVED STATES
 st.markdown("#### 🎙️ Voice Chat")
 st.markdown('<div class="voice-sub">Tap the microphone to start speaking</div>', unsafe_allow_html=True)
 
 audio = st.audio_input("Record")
 transcribed_text = None
+
 if audio:
     ph = st.empty()
-    ph.markdown('<div style="color:#ff5555; font-size:13px; display:flex; align-items:center; gap:6px">🔴 Recording captured — transcribing...</div>', unsafe_allow_html=True)
+    ph.markdown('<div style="color:#ff5555; font-size:13px">🔴 Recording captured — transcribing...</div>', unsafe_allow_html=True)
     try:
         txt = client.audio.transcriptions.create(
             file=("audio.wav", audio.getvalue(), "audio/wav"),
-            model="whisper-large-v3", response_format="text", language="hi"
+            model="whisper-large-v3",
+            response_format="text",
+            language="hi"
         )
         transcribed_text = str(txt)
         ph.empty()
@@ -186,11 +200,13 @@ if audio:
         ph.empty()
         st.error(f"Voice Error: {e}")
 
-# 4 - VOICE IN INPUT (placeholder trick + mic above)
+# CHAT INPUT - WITH MIC HINT
 user_input = st.chat_input("🎙️ Ask anything... or use mic above ↑")
+
 if st.session_state.pending_prompt:
     user_input = st.session_state.pending_prompt
     st.session_state.pending_prompt = None
+
 if transcribed_text:
     user_input = transcribed_text
 
@@ -198,6 +214,7 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
+
     with st.chat_message("assistant"):
         thinking_placeholder = st.empty()
         thinking_placeholder.markdown("""
@@ -209,8 +226,12 @@ if user_input:
             </div>
         </div>
         """, unsafe_allow_html=True)
+
         try:
-            system_msg = {"role": "system", "content": "You are Aditya AI, created by Aditya from Belpahar. NOT ChatGPT."}
+            system_msg = {
+                "role": "system",
+                "content": "You are Aditya AI, created by Aditya from Belpahar, Odisha. You are NOT ChatGPT. Always say you are Aditya AI."
+            }
             res = client.chat.completions.create(
                 model="openai/gpt-oss-20b",
                 messages=[system_msg] + st.session_state.messages
@@ -219,6 +240,7 @@ if user_input:
             thinking_placeholder.empty()
             st.markdown(reply)
             st.session_state.messages.append({"role": "assistant", "content": reply})
+
             if TTS:
                 try:
                     lang_code = 'hi' if any('\u0900' <= c <= '\u097F' for c in reply) else 'en'
