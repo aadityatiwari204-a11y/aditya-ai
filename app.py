@@ -41,18 +41,21 @@ with st.sidebar:
 
 if st.session_state.page=="blog":
     st.markdown("# 👤 Aditya - Belpahar")
-    st.markdown("**Hey, I'm Aditya from Belpahar, Odisha! 🙏 I love making cool things with AI & Photoshop.**")
+    st.markdown("**Hey, I'm Aditya from Belpahar, Odisha! 🙏**")
+    st.link_button("🌐 Visit My Real Blog", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
     st.divider()
-    st.markdown("### 🔥 About This AI: Aditya AI, made with Python + Groq AI. Chat Hindi & English, Voice support.")
+    st.markdown("### 🔥 About: Aditya AI made with Python + Groq AI. Hindi & English Voice.")
     st.markdown("**Location: Belpahar, Jharsuguda, Odisha**")
     st.divider()
-    st.markdown("## 📝 My Blog Posts - Click to Read")
-    with st.expander("📸 Post 1: How I Built Aditya AI - My First AI Project", expanded=True):
-        st.write("Date: 6 Sep 2026 | Belpahar\n\nMaine socha apna khud ka AI banau? Python + Streamlit + Groq AI use karke aditya-ai-belpahar.streamlit.app LIVE kar diya! 2 din lage par ho gaya. First project!")
-    with st.expander("🎨 Post 2: Photoshop Tips for Beginners"):
-        st.write("Photoshop mein 3 cheez: Layers alag rakho, Background Blur - Filter > Gaussian Blur, Thumbnail - Bold text + bright bg.")
-    with st.expander("💡 Post 3: Why I Built This for Belpahar Friends"):
-        st.write("Belpahar mein talent hai par resources kam. Isliye Hindi mein help ke liye Aditya AI banaya. Next: Image Generator add karunga.")
+    st.markdown("## 📝 Latest Posts From My Blogger")
+    st.markdown("#### 1. Aditya AI Now Has Voice Chat!")
+    st.caption("Sep 05, 2026 - aditya-ai-belpahar.blogspot.com")
+    st.link_button("📖 Read on Blogger - Voice Chat Post", "https://aditya-ai-belpahar.blogspot.com", key="b1")
+    st.markdown("#### 2. Privacy Policy and About Us")
+    st.caption("Sep 04, 2026")
+    st.link_button("📖 Read Privacy Policy", "https://aditya-ai-belpahar.blogspot.com", key="b2")
+    st.divider()
+    st.link_button("🚀 Open aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
     st.divider()
     if st.button("⬅️ Back to Chat"):
         st.session_state.page="chat"; st.rerun()
