@@ -857,12 +857,13 @@ def get_ai_response(client, model, user_message):
 # ==============================
 
 USER_MEMORY = """
-The user's age is 17.
-The user's height is 180 cm .
-The user reads is currently in class 12 reading in Belpahar English Medium School .
-the user has is a pro programmer who has built his own AI at the age od 17 .
+The user's age is 18.
+The user's height is 180 cm.
+The user is currently in Class 12 at Belpahar English Medium School.
+The user is an experienced programmer who built his own AI at the age of 17.
+
 Use this information when it is relevant to the user's question.
-Do not repeatedly mention the user's age unless it is relevant.
+Do not repeatedly mention the user's personal information unless it is relevant.
 """
 
 SYSTEM_PROMPT = f"""
