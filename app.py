@@ -34,4 +34,64 @@ with st.sidebar:
     st.divider()
     if st.button("➕ New Chat", use_container_width=True):
         nid=f"chat_{uuid.uuid4().hex[:6]}"; st.session_state.current_chat_id=nid; st.session_state.messages=[]; st.session_state.all_chats[nid]={"title":"New Chat","messages":[]}; st.session_state.page="chat"; st.rerun()
-    st.markdown("
+    st.markdown("### 📜 History")
+    for cid,data in list(st.session_state.all_chats.items())[::-1][:10]:
+        if st.button(f"📄 {data['title'][:20]}", key=cid, use_container_width=True):
+            st.session_state.current_chat_id=cid; st.session_state.messages=data["messages"]; st.session_state.page="chat"; st.rerun()
+
+if st.session_state.page=="blog":
+    st.markdown("# 👤 Aditya - Belpahar")
+    st.markdown("**Hey, I'm Aditya from Belpahar, Odisha! 🙏**")
+    st.link_button("🌐 Visit My Real Blog", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
+    st.divider()
+    st.markdown("### 🔥 About: Aditya AI made with Python + Groq AI. Hindi & English Voice.")
+    st.markdown("**Location: Belpahar, Jharsuguda, Odisha**")
+    st.divider()
+    st.markdown("## 📝 Latest Posts From My Blogger")
+    st.markdown("#### 1. Aditya AI Now Has Voice Chat!")
+    st.caption("Sep 05, 2026 - aditya-ai-belpahar.blogspot.com")
+    st.link_button("📖 Read on Blogger - Voice Chat Post", "https://aditya-ai-belpahar.blogspot.com", key="b1")
+    st.markdown("#### 2. Privacy Policy and About Us")
+    st.caption("Sep 04, 2026")
+    st.link_button("📖 Read Privacy Policy", "https://aditya-ai-belpahar.blogspot.com", key="b2")
+    st.divider()
+    st.link_button("🚀 Open aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
+    st.divider()
+    if st.button("⬅️ Back to Chat"):
+        st.session_state.page="chat"; st.rerun()
+    st.stop()
+
+if st.session_state.page=="voice":
+    st.markdown("# 🎤 Voice Chat")
+    audio = st.audio_input("Record your voice")
+    if audio:
+        with st.spinner("Sun raha hu..."):
+            try:
+                transcription = client.audio.transcriptions.create(file=(audio.name, audio.getvalue()), model="whisper-large-v3-turbo", language="hi")
+                user_text = transcription.text
+                st.success(f"You said: {user_text}")
+                r = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"system","content":SYSTEM_PROMPT},{"role":"user","content":user_text}], max_tokens=1000)
+                ans = r.choices[0].message.content
+                st.markdown(ans)
+                lang='hi' if any('\u0900'<=c<='\u097F' for c in ans) else 'en'
+                tts=gTTS(text=ans[:400], lang=lang); b=io.BytesIO(); tts.write_to_fp(b); b.seek(0); st.audio(b, format="audio/mp3", autoplay=True)
+            except Exception as e:
+                st.error(f"Error: {e}")
+    if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
+    st.stop()
+
+st.markdown("# 😊 Aditya AI")
+st.caption("Photoshop • Editing • Design • Hindi + English Voice")
+for m in st.session_state.messages:
+    with st.chat_message(m["role"]): st.markdown(m["content"])
+inp = st.chat_input("Type...")
+if inp:
+    st.session_state.messages.append({"role":"user","content":inp})
+    with st.chat_message("user"): st.markdown(inp)
+    with st.chat_message("assistant"):
+        msgs=[{"role":"system","content":SYSTEM_PROMPT}] + [{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
+        r=client.chat.completions.create(model="openai/gpt-oss-20b", messages=msgs, max_tokens=1500)
+        ans=r.choices[0].message.content
+        st.markdown(ans)
+        st.session_state.messages.append({"role":"assistant","content":ans})
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"]=st.session_state.messages
