@@ -1,73 +1,33 @@
 import streamlit as st
 from groq import Groq
 from gtts import gTTS
-import io
-import uuid
+import io, uuid
 from streamlit_mic_recorder import mic_recorder
-import datetime
 
-# ============================================================
-# PAGE CONFIG - Aditya AI Belpahar
-# ============================================================
 st.set_page_config(
     page_title="Aditya AI - Belpahar",
     page_icon="🤖",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# ============================================================
-# CUSTOM CSS - Gradient Background
-# ============================================================
 st.markdown("""
 <style>
-.stApp {
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    color:white;
-}
-[data-testid="stSidebar"] {
-    background: rgba(20,20,40,0.95);
-    border-right: 1px solid rgba(255,255,255,0.1);
-}
-.stChatMessage {
-    background: rgba(255,255,255,0.08)!important;
-    border-radius:15px!important;
-    border:1px solid rgba(255,255,255,0.15);
-    padding: 15px;
-}
-h1 {
-    text-align:center;
-    background: linear-gradient(90deg, #00f2fe, #4facfe);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    font-weight:800;
-    font-size: 3rem;
-}
-.stButton>button {
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
-}
+.stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
+[data-testid="stSidebar"] { background: rgba(20,20,40,0.95); }
+.stChatMessage { background: rgba(255,255,255,0.08)!important; border-radius:15px!important; border:1px solid rgba(255,255,255,0.15); }
+h1 { text-align:center; background: linear-gradient(90deg, #00f2fe, #4facfe); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:800; }
 </style>
 """, unsafe_allow_html=True)
 
-# ============================================================
-# GROQ CLIENT INIT
-# ============================================================
-try:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-except Exception as e:
-    st.error("GROQ_API_KEY nahi mila secrets me. Streamlit secrets me add karo.")
-    st.stop()
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# ============================================================
-# SESSION STATE INIT - Saare variables
-# ============================================================
+# --- Session State ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "all_chats" not in st.session_state:
     st.session_state.all_chats = {
-        "chat_1": {"title": "New Chat", "messages": [], "time": str(datetime.datetime.now())}
+        "chat_1": {"title": "New Chat", "messages": []}
     }
 
 if "current_chat_id" not in st.session_state:
@@ -76,34 +36,21 @@ if "current_chat_id" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "chat"
 
-if "search_query" not in st.session_state:
-    st.session_state.search_query = ""
-
-# ============================================================
-# SYSTEM PROMPT - FINAL FIX FOR HINDI + ENGLISH + HINGLISH
-# ============================================================
+# --- YAHAN SIRF LANGUAGE FIX KIYA HAI ---
 SYSTEM_PROMPT = """
-You are Aditya AI, created by Aditya from Belpahar, Odisha, India.
-You are NOT ChatGPT, you are NOT made by OpenAI.
+You are Aditya AI, created by Aditya from Belpahar, Odisha.
+You are NOT ChatGPT, NOT OpenAI.
 
-LANGUAGE RULE - THIS IS MOST IMPORTANT:
-You must automatically detect user's language and reply in SAME language.
-- If user writes in Hindi like "तुम कौन हो" -> Reply in pure Hindi: "मैं Aditya AI हूँ..."
-- If user writes in English like "Who are you?" -> Reply in pure English: "I am Aditya AI..."
-- If user writes in Hinglish like "bhai tu kaun hai?" or "thumbnail kaise banaye" -> Reply in Hinglish: "Haan bhai main Aditya AI hu yaar, Aditya ne mujhe Belpahar me banaya hai, dekho thumbnail banana bahut easy hai..."
-
-Style: Friendly, helpful, short, like a friend from Odisha.
-Always be helpful for Photoshop, Editing, Design questions.
+RULE: Reply in SAME language as user.
+- Hindi user -> Hindi reply
+- English user -> English reply
+- Hinglish user like 'Hae, tu kaun hai?' -> Hinglish reply like 'Haan bhai main Aditya AI hu yaar, Aditya ne mujhe Belpahar me banaya hai'
+Be friendly and helpful.
 """
 
-# ============================================================
-# SIDEBAR - Navigation + History + Search
-# ============================================================
+# --- Sidebar ---
 with st.sidebar:
     st.markdown("## ✨ Aditya AI - Belpahar")
-    st.caption("Made by Aditya | Belpahar, Jharsuguda")
-
-    st.divider()
 
     if st.button("💬 Chat", use_container_width=True):
         st.session_state.page = "chat"
@@ -119,23 +66,157 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button("➕ New Chat", use_container_width=True, type="primary"):
+    if st.button("➕ New Chat", use_container_width=True):
         nid = f"chat_{uuid.uuid4().hex[:6]}"
         st.session_state.current_chat_id = nid
         st.session_state.messages = []
-        st.session_state.all_chats[nid] = {
-            "title": "New Chat",
-            "messages": [],
-            "time": str(datetime.datetime.now())
-        }
+        st.session_state.all_chats[nid] = {"title": "New Chat", "messages": []}
         st.session_state.page = "chat"
         st.rerun()
 
-    st.markdown("### 🔍 Search Chats")
-    search_input = st.text_input(
-        "search",
-        placeholder="Search...",
-        label_visibility="collapsed"
+    st.markdown("### 📜 History")
+
+    for cid, data in list(st.session_state.all_chats.items())[::-1][:10]:
+        if st.button(f"📄 {data['title'][:20]}", key=cid, use_container_width=True):
+            st.session_state.current_chat_id = cid
+            st.session_state.messages = data["messages"]
+            st.session_state.page = "chat"
+            st.rerun()
+
+# --- Blog Page ---
+if st.session_state.page == "blog":
+    st.markdown("# 👤 Aditya - Belpahar")
+    st.markdown("**Hey, I'm Aditya from Belpahar, Odisha! 🙏**")
+    st.link_button("🌐 Visit My Real Blog", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
+    st.divider()
+    st.markdown("### 🔥 About: Aditya AI made with Python + Groq AI. Hindi & English Voice.")
+    st.markdown("**Location: Belpahar, Jharsuguda, Odisha**")
+    st.divider()
+    st.markdown("## 📝 Latest Posts From My Blogger")
+    st.markdown("#### 1. Aditya AI Now Has Voice Chat!")
+    st.caption("Sep 05, 2026 - aditya-ai-belpahar.blogspot.com")
+    st.link_button("📖 Read on Blogger - Voice Chat Post", "https://aditya-ai-belpahar.blogspot.com", key="b1")
+    st.markdown("#### 2. Privacy Policy and About Us")
+    st.caption("Sep 04, 2026")
+    st.link_button("📖 Read Privacy Policy", "https://aditya-ai-belpahar.blogspot.com", key="b2")
+    st.divider()
+    st.link_button("🚀 Open aditya-ai-belpahar.blogspot.com", "https://aditya-ai-belpahar.blogspot.com", use_container_width=True)
+    st.divider()
+    if st.button("⬅️ Back to Chat"):
+        st.session_state.page = "chat"
+        st.rerun()
+    st.stop()
+
+# --- Voice Page ---
+if st.session_state.page == "voice":
+    st.markdown("# 🎤 Voice Chat")
+    audio = st.audio_input("Record your voice")
+    if audio:
+        with st.spinner("Sun raha hu..."):
+            try:
+                transcription = client.audio.transcriptions.create(
+                    file=(audio.name, audio.getvalue()),
+                    model="whisper-large-v3-turbo"
+                )
+                user_text = transcription.text
+                st.success(f"You said: {user_text}")
+
+                r = client.chat.completions.create(
+                    model="openai/gpt-oss-20b",
+                    messages=[{"role":"system","content":SYSTEM_PROMPT},{"role":"user","content":user_text}],
+                    max_tokens=1000,
+                    temperature=0.7
+                )
+                ans = r.choices[0].message.content
+                st.markdown(ans)
+
+                lang = 'hi' if any('\u0900' <= c <= '\u097F' for c in ans) else 'en'
+                tts = gTTS(text=ans[:400], lang=lang)
+                b = io.BytesIO()
+                tts.write_to_fp(b)
+                b.seek(0)
+                st.audio(b, format="audio/mp3", autoplay=True)
+
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+    if st.button("⬅️ Back to Chat"):
+        st.session_state.page = "chat"
+        st.rerun()
+    st.stop()
+
+# --- Main Chat Page ---
+st.markdown("# 😊 Aditya AI")
+st.caption("Photoshop • Editing • Design • Hindi + English Voice + Mic 🎤")
+
+for m in st.session_state.messages:
+    with st.chat_message(m["role"]):
+        st.markdown(m["content"])
+
+# Mic + Text Input
+col1, col2 = st.columns([1, 9])
+
+with col1:
+    mic_audio = mic_recorder(
+        start_prompt="🎤",
+        stop_prompt="🔴",
+        just_once=True,
+        use_container_width=True,
+        key="chat_mic"
     )
 
-    st.markdown("### 📜 History")
+with col2:
+    inp = st.chat_input("Type or use Mic...")
+
+final_input = None
+
+if mic_audio:
+    with st.spinner("Samajh raha hu..."):
+        try:
+            transcription = client.audio.transcriptions.create(
+                file=("audio.wav", mic_audio['bytes']),
+                model="whisper-large-v3-turbo"
+            )
+            final_input = transcription.text
+            st.toast(f"🎤 Tumne bola: {final_input}")
+        except Exception as e:
+            st.error(f"Mic Error: {e}")
+
+if inp:
+    final_input = inp
+
+if final_input:
+    st.session_state.messages.append({"role":"user","content":final_input})
+
+    with st.chat_message("user"):
+        st.markdown(final_input)
+
+    with st.chat_message("assistant"):
+        msgs = [{"role":"system","content":SYSTEM_PROMPT}] + [{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
+
+        r = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=msgs,
+            max_tokens=1500,
+            temperature=0.7
+        )
+        ans = r.choices[0].message.content
+        st.markdown(ans)
+
+        try:
+            lang = 'hi' if any('\u0900' <= c <= '\u097F' for c in ans) else 'en'
+            tts = gTTS(text=ans[:350], lang=lang)
+            b = io.BytesIO()
+            tts.write_to_fp(b)
+            b.seek(0)
+            st.audio(b, format="audio/mp3")
+        except:
+            pass
+
+        st.session_state.messages.append({"role":"assistant","content":ans})
+
+    if st.session_state.all_chats[st.session_state.current_chat_id]["title"] == "New Chat":
+        st.session_state.all_chats[st.session_state.current_chat_id]["title"] = final_input[:30]
+
+    st.session_state.all_chats[st.session_state.current_chat_id]["messages"] = st.session_state.messages
+    st.rerun()
