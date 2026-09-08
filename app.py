@@ -1,55 +1,87 @@
 import streamlit as st
 from groq import Groq
 from gtts import gTTS
-import io, uuid, datetime, time
+import io, uuid, datetime, time, re, json
+from datetime import datetime as dt
 
-st.set_page_config(page_title="Aditya AI - Final", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Aditya AI - Belpahar 500 Lines Final", page_icon="🤖", layout="wide", initial_sidebar_state="expanded")
+
+st.markdown("""
+<style>
+.stApp{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff}
+.stChatMessage{background:rgba(255,255,255,0.08)!important;border-radius:18px!important;border:1px solid rgba(255,255,255,0.1);padding:18px;margin:12px 0;backdrop-filter:blur(10px)}
+.stChatMessage[data-testid*="user"]{background:linear-gradient(135deg,#667eea,#764ba2)!important}
+h1{color:#00f2fe;text-align:center;font-weight:800;text-shadow:0 0 20px #00f2fe}
+h2,h3{color:#f0f0f0}
+.stButton>button{background:linear-gradient(90deg,#00f2fe,#4facfe);color:#000;font-weight:700;border-radius:10px;border:none;transition:0.3s}
+.stButton>button:hover{transform:scale(1.03);box-shadow:0 0 15px #00f2fe}
+#MainMenu{visibility:hidden} footer{visibility:hidden}
+</style>
+""", unsafe_allow_html=True)
+
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-if "messages" not in st.session_state: st.session_state.messages=[]
-if "all_chats" not in st.session_state: st.session_state.all_chats={"chat_1":{"title":"New Chat","messages":[]}}
-if "current_chat_id" not in st.session_state: st.session_state.current_chat_id="chat_1"
-if "page" not in st.session_state: st.session_state.page="chat"
-if "voice_enabled" not in st.session_state: st.session_state.voice_enabled=True
-if "last_audio_hash" not in st.session_state: st.session_state.last_audio_hash=None
-if "last_text" not in st.session_state: st.session_state.last_text=None
+if "msgs" not in st.session_state:
+    st.session_state.msgs = []
+if "all_chats" not in st.session_state:
+    st.session_state.all_chats = {"c1": {"title": "New Chat Belpahar", "msgs": [], "created": str(dt.now())}}
+if "cid" not in st.session_state:
+    st.session_state.cid = "c1"
+if "last_hash" not in st.session_state:
+    st.session_state.last_hash = ""
+if "last_text" not in st.session_state:
+    st.session_state.last_text = ""
+if "voice" not in st.session_state:
+    st.session_state.voice = True
+if "search_q" not in st.session_state:
+    st.session_state.search_q = ""
+if "theme" not in st.session_state:
+    st.session_state.theme = "dark"
 
-SYSTEM="You are Aditya AI from Belpahar, Odisha. NOT ChatGPT. Hindi->Hindi, English->English, Hinglish like Haan bhai."
+SYSTEM_PROMPT = """
+You are Aditya AI, created by Aditya from Belpahar, Odisha, India.
+You are NOT ChatGPT, NOT Meta AI, you are Aditya AI.
+Rules:
+- Hindi input -> Hindi output, English -> English, Hinglish -> Hinglish (Haan bhai yaar style)
+- Photoshop, Photo Editing, Graphic Design expert
+- Friendly, helpful, from Belpahar
+- Never output Urdu/Arabic script, always convert to Hinglish
+- Keep answers clear, useful, practical
+"""
 
-def speak(t):
+def is_hindi(text):
+    return any("\u0900" <= c <= "\u097F" for c in text)
+
+def is_urdu(text):
+    return any("\u0600" <= c <= "\u06FF" for c in text)
+
+def clean_text(t):
+    t = t.replace("*", "").replace("#", "")
+    t = re.sub(r"\s+", " ", t)
+    return t.strip()
+
+def text_to_speech(text):
     try:
-        lang='hi' if any('\u0900'<=c<='\u097F' for c in t) else 'en'
-        c=t[:400].replace('*','')
-        tts=gTTS(c,lang=lang)
-        b=io.BytesIO(); tts.write_to_fp(b); b.seek(0); return b
-    except: return None
+        if not text or len(text) < 2:
+            return None
+        clean = clean_text(text)[:450]
+        lang = "hi" if is_hindi(clean) or "bhai" in clean.lower() or "yaar" in clean.lower() else "en"
+        tts = gTTS(text=clean, lang=lang, slow=False)
+        buf = io.BytesIO()
+        tts.write_to_fp(buf)
+        buf.seek(0)
+        return buf
+    except Exception as e:
+        print(f"TTS error {e}")
+        return None
 
-def transcribe(a):
+def speech_to_text(audio_file):
     try:
-        d=a.getvalue()
-        if len(d)<2000: return None
-        r=client.audio.transcriptions.create(file=("a.wav",d,"audio/wav"),model="whisper-large-v3",response_format="text",prompt="Hindi Hinglish English")
-        txt=r if isinstance(r,str) else r.text
-        txt=txt.strip()
-        if any('\u0600'<=c<='\u06FF' for c in txt):
-            cc=client.chat.completions.create(model="openai/gpt-oss-20b",messages=[{"role":"system","content":"Urdu to Hinglish"},{"role":"user","content":txt}],max_tokens=100)
-            txt=cc.choices[0].message.content
-        return txt
-    except Exception as e: st.error(e); return None
-
-with st.sidebar:
-    st.markdown("## ✨ Aditya AI")
-    if st.button("💬 Chat Page",use_container_width=True): st.session_state.page="chat"; st.rerun()
-    if st.button("📝 Blog / About",use_container_width=True): st.session_state.page="blog"; st.rerun()
-    if st.button("🎤 Voice Chat",use_container_width=True): st.session_state.page="voice"; st.rerun()
-    st.divider()
-    st.session_state.voice_enabled=st.toggle("🔊 Voice ON",value=st.session_state.voice_enabled)
-    st.divider()
-    if st.button("➕ New Chat",use_container_width=True):
-        nid=f"chat_{uuid.uuid4().hex[:4]}"; st.session_state.current_chat_id=nid; st.session_state.messages=[]; st.session_state.all_chats[nid]={"title":"New Chat","messages":[]}; st.session_state.last_audio_hash=None; st.rerun()
-    st.divider()
-    st.markdown("### 📜 History")
-    for cid,data in list(st.session_state.all_chats.items())[::-1][:10]:
-        if st.button(f"{data['title'][:20]}",key=f"h_{cid}",use_container_width=True):
-            st.session_state.current_chat_id=cid
-            
+        data = audio_file.getvalue()
+        if len(data) < 2500:
+            return None
+        transcription = client.audio.transcriptions.create(
+            file=("voice.wav", data, "audio/wav"),
+            model="whisper-large-v3",
+            response_format="text",
+           
