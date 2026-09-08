@@ -2,6 +2,7 @@ import streamlit as st
 from groq import Groq
 from gtts import gTTS
 import io, uuid
+from streamlit_mic_recorder import mic_recorder
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
 
@@ -21,7 +22,17 @@ if "all_chats" not in st.session_state: st.session_state.all_chats={"chat_1":{"t
 if "current_chat_id" not in st.session_state: st.session_state.current_chat_id="chat_1"
 if "page" not in st.session_state: st.session_state.page="chat"
 
-SYSTEM_PROMPT = "You are Aditya AI, created by Aditya from Belpahar, Odisha. You are NOT ChatGPT, NOT OpenAI. Say you are Aditya AI!"
+# --- YAHAN MAI HINGLISH FIX KIYA HU ---
+SYSTEM_PROMPT = """
+You are Aditya AI, created by Aditya from Belpahar, Odisha. You are NOT ChatGPT, NOT OpenAI. Say you are Aditya AI!
+
+LANGUAGE RULE: You MUST always reply in Hinglish (Hindi + English mix) like a friendly Indian friend.
+- If user speaks in Hindi, reply in Hindi mixed English.
+- If user speaks in English, reply in English mixed Hindi.
+- Use words like 'Haan bhai', 'Bilkul', 'Samajh gaya', 'Chalo karte hain', 'Dekho'.
+- Keep it natural, short, helpful like ChatGPT Voice Mode.
+- Always say you are Aditya AI.
+"""
 
 with st.sidebar:
     st.markdown("## ✨ Aditya AI - Belpahar")
@@ -80,18 +91,56 @@ if st.session_state.page=="voice":
     if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
     st.stop()
 
+# --- CHAT PAGE WITH MIC BUTTON (Naya Feature) ---
 st.markdown("# 😊 Aditya AI")
-st.caption("Photoshop • Editing • Design • Hindi + English Voice")
+st.caption("Photoshop • Editing • Design • Hindi + English Voice + Mic 🎤")
+
+# Purane messages dikhao
 for m in st.session_state.messages:
     with st.chat_message(m["role"]): st.markdown(m["content"])
-inp = st.chat_input("Type...")
+
+# Mic + Text Input ek saath
+col1, col2 = st.columns([1, 8])
+with col1:
+    mic_audio = mic_recorder(start_prompt="🎤", stop_prompt="🔴", just_once=True, use_container_width=True, key="chat_mic")
+
+with col2:
+    inp = st.chat_input("Type or use Mic...")
+
+final_input = None
+
+# Agar mic se bola
+if mic_audio:
+    with st.spinner("Samajh raha hu..."):
+        try:
+            transcription = client.audio.transcriptions.create(file=("audio.wav", mic_audio['bytes']), model="whisper-large-v3-turbo", language="hi")
+            final_input = transcription.text
+            st.toast(f"🎤 Tumne bola: {final_input}")
+        except Exception as e:
+            st.error(f"Mic Error: {e}")
+
+# Agar type kiya
 if inp:
-    st.session_state.messages.append({"role":"user","content":inp})
-    with st.chat_message("user"): st.markdown(inp)
+    final_input = inp
+
+# Ab AI ko bhejo
+if final_input:
+    st.session_state.messages.append({"role":"user","content":final_input})
+    with st.chat_message("user"): st.markdown(final_input)
     with st.chat_message("assistant"):
         msgs=[{"role":"system","content":SYSTEM_PROMPT}] + [{"role":x["role"],"content":x["content"]} for x in st.session_state.messages]
         r=client.chat.completions.create(model="openai/gpt-oss-20b", messages=msgs, max_tokens=1500)
         ans=r.choices[0].message.content
         st.markdown(ans)
+        # Auto voice reply - Chhota sa audio
+        try:
+            lang='hi' if any('\u0900'<=c<='\u097F' for c in ans) else 'en'
+            tts=gTTS(text=ans[:350], lang=lang); b=io.BytesIO(); tts.write_to_fp(b); b.seek(0); st.audio(b, format="audio/mp3")
+        except:
+            pass
         st.session_state.messages.append({"role":"assistant","content":ans})
+    # Title auto update
+    if st.session_state.all_chats[st.session_state.current_chat_id]["title"] == "New Chat":
+        st.session_state.all_chats[st.session_state.current_chat_id]["title"] = final_input[:30]
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"]=st.session_state.messages
+    st.rerun()
