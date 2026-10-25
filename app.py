@@ -4,7 +4,16 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-
+st.markdown("""
+<style>
+.stApp {
+    background-image: linear-gradient(rgba(8,12,20,0.80), rgba(8,12,20,0.88)), url("https://images.unsplash.com/photo-1448375240586-882707db888b");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+</style>
+""", unsafe_allow_html=True)
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
