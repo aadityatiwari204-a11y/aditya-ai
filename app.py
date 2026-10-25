@@ -81,11 +81,11 @@ if st.session_state.page=="voice":
     st.stop()
 
 st.markdown("""
-<div style='text-align:center;'>
-    <div style='display:inline-block; background:rgba(0,229,255,0.1); border:1px solid #00E5FF; border-radius:30px; padding:10px 25px;'>
-        <span style='font-size:28px;'>🤖</span>
-        <span style='color:#00E5FF; font-weight:bold; font-size:28px; margin-left:10px;'>Aditya AI</span>
-        <span style='margin-left:15px; color:white; background:#00E5FF; padding:2px 8px; border-radius:10px; font-size:12px;'>ANIME EDITION</span>
+<div style='display:flex; align-items:center; gap:15px; padding:5px 0;'>
+    <img src='https://i.imgur.com/8Km9tLL.png' width='55' style='border-radius:50%;'>
+    <div>
+        <h1 style='margin:0; color:#2C4A6E; font-size:36px; font-weight:700; letter-spacing:-1px; font-family: Inter, sans-serif;'>Aditya <span style='color:#7AA5C5; font-weight:400;'>AI</span></h1>
+        <p style='margin:0; color:#888; font-size:12px; letter-spacing:1.5px;'>PHOTOSHOP • EDITING • DESIGN</p>
     </div>
 </div>
 """, unsafe_allow_html=True)
