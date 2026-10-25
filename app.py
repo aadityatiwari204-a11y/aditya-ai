@@ -4,18 +4,43 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- ANIME THEME FORCE ---
+# --- ANIME THEME V2 - VISIBLE CHANGE ---
 st.markdown("""
 <style>
-.stApp { background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f0a19 80%, #000000 100%) !important; }
-section[data-testid="stSidebar"] > div { background: rgba(20,20,40,0.85) !important; backdrop-filter: blur(12px); }
-div[data-testid="stChatMessage"] { background: rgba(255,255,255,0.07) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 16px !important; }
-h1 { color: #38bdf8 !important; text-shadow: 0 0 20px rgba(56,189,248,0.6) !important; }
-.stButton button { background: rgba(139,92,246,0.15) !important; border: 1px solid rgba(139,92,246,0.4) !important; color: white !important; border-radius: 12px !important; }
-div[data-testid="stChatInput"] { border: 2px solid #8b5cf6 !important; box-shadow: 0 0 20px rgba(139,92,246,0.3) !important; border-radius: 20px !important; }
+/* FORCE BACKGROUND TO PURE BLACK WITH STARS */
+.stApp {
+    background: #000000 !important;
+    background-image: radial-gradient(white 1px, transparent 1px) !important;
+    background-size: 50px 50px !important;
+}
+
+/* TITLE BIG GLOWING RED */
+h1, [data-testid="stMarkdownContainer"] h1 {
+    color: #ff0000 !important;
+    text-shadow: 0 0 20px red, 0 0 40px red !important;
+    font-size: 50px !important;
+}
+
+/* SIDEBAR AKATSUKI BLACK + RED BORDER */
+section[data-testid="stSidebar"] {
+    background: #0a0a0a !important;
+    border-right: 3px solid red !important;
+}
+
+/* CHAT BUBBLES WITH RED GLOW */
+div[data-testid="stChatMessage"] {
+    background: #1a1a1a !important;
+    border: 2px solid red !important;
+    box-shadow: 0 0 15px red !important;
+}
+
+/* INPUT BOX GREEN GLOW - VERY VISIBLE */
+div[data-testid="stChatInput"] {
+    border: 3px solid #00ff00 !important;
+    box-shadow: 0 0 25px #00ff00 !important;
+}
 </style>
 """, unsafe_allow_html=True)
-# --- END ---
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
