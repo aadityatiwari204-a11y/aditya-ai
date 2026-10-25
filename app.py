@@ -80,7 +80,14 @@ if st.session_state.page=="voice":
     if st.button("⬅️ Back to Chat"): st.session_state.page="chat"; st.rerun()
     st.stop()
 
-st.markdown("# 😊 Aditya AI")
+st.markdown("""
+<div style='display:flex; align-items:center; gap:15px; justify-content:center;'>
+    <img src='https://i.ibb.co/YOUR-ANIME-LOGO.png' width='65' style='border-radius:50%; border:2px solid #00E5FF; box-shadow:0 0 20px #00E5FF;'>
+    <h1 style='color:#00E5FF; text-shadow:0 0 15px #00E5FF, 0 0 30px #00E5FF; font-family:Orbitron; margin:0;'>Aditya AI</h1>
+    <span style='background:linear-gradient(90deg,#00E5FF,#9D00FF); padding:3px 10px; border-radius:20px; font-size:12px; color:white;'>BETA</span>
+</div>
+<p style='text-align:center; color:#aaa; font-size:14px;'>Photoshop • Editing • Design • Hindi + English Voice</p>
+""", unsafe_allow_html=True)
 st.caption("Photoshop • Editing • Design • Hindi + English Voice")
 for m in st.session_state.messages:
     with st.chat_message(m["role"]): st.markdown(m["content"])
