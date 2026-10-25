@@ -4,43 +4,62 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- ANIME THEME V2 - VISIBLE CHANGE ---
+# --- FINAL ANIME THEME - CLEAN & PREMIUM ---
 st.markdown("""
 <style>
-/* FORCE BACKGROUND TO PURE BLACK WITH STARS */
+/* Main - Deep Anime Night */
 .stApp {
-    background: #000000 !important;
-    background-image: radial-gradient(white 1px, transparent 1px) !important;
-    background-size: 50px 50px !important;
+    background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f0a19 55%, #050510 100%) !important;
 }
 
-/* TITLE BIG GLOWING RED */
-h1, [data-testid="stMarkdownContainer"] h1 {
-    color: #ff0000 !important;
-    text-shadow: 0 0 20px red, 0 0 40px red !important;
-    font-size: 50px !important;
-}
-
-/* SIDEBAR AKATSUKI BLACK + RED BORDER */
+/* Sidebar - Soft Glass */
 section[data-testid="stSidebar"] {
-    background: #0a0a0a !important;
-    border-right: 3px solid red !important;
+    background: rgba(15, 10, 25, 0.95) !important;
+    border-right: 1px solid rgba(139, 92, 246, 0.15) !important;
 }
 
-/* CHAT BUBBLES WITH RED GLOW */
+/* Title - Soft Blue Glow */
+h1 {
+    color: #e0e7ff !important;
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Chat Bubbles - Clean Glass, NO red border */
 div[data-testid="stChatMessage"] {
-    background: #1a1a1a !important;
-    border: 2px solid red !important;
-    box-shadow: 0 0 15px red !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+    padding: 12px !important;
 }
 
-/* INPUT BOX GREEN GLOW - VERY VISIBLE */
+/* Buttons - Subtle Hover */
+.stButton > button {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    color: #cbd5e1 !important;
+    transition: 0.2s !important;
+}
+.stButton > button:hover {
+    background: rgba(139, 92, 246, 0.15) !important;
+    border-color: rgba(139, 92, 246, 0.4) !important;
+    color: white !important;
+}
+
+/* Input - Soft Purple Glow Only */
 div[data-testid="stChatInput"] {
-    border: 3px solid #00ff00 !important;
-    box-shadow: 0 0 25px #00ff00 !important;
+    background: rgba(15, 10, 25, 0.9) !important;
+    border: 1px solid rgba(139, 92, 246, 0.25) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.1) !important;
 }
 </style>
 """, unsafe_allow_html=True)
+# --- END FINAL THEME ---
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
