@@ -4,62 +4,29 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- FINAL ANIME THEME - CLEAN & PREMIUM ---
-st.markdown("""
-<style>
-/* Main - Deep Anime Night */
-.stApp {
-    background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f0a19 55%, #050510 100%) !important;
-}
+# --- BACKGROUND ONLY - FOREST MIST #4 ---
+import base64
 
-/* Sidebar - Soft Glass */
-section[data-testid="stSidebar"] {
-    background: rgba(15, 10, 25, 0.95) !important;
-    border-right: 1px solid rgba(139, 92, 246, 0.15) !important;
-}
+def get_base64_bg(image_file):
+    with open(image_file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
-/* Title - Soft Blue Glow */
-h1 {
-    color: #e0e7ff !important;
-    text-shadow: 0 0 15px rgba(56, 189, 248, 0.5) !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px !important;
-}
-
-/* Chat Bubbles - Clean Glass, NO red border */
-div[data-testid="stChatMessage"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
-    padding: 12px !important;
-}
-
-/* Buttons - Subtle Hover */
-.stButton > button {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 12px !important;
-    color: #cbd5e1 !important;
-    transition: 0.2s !important;
-}
-.stButton > button:hover {
-    background: rgba(139, 92, 246, 0.15) !important;
-    border-color: rgba(139, 92, 246, 0.4) !important;
-    color: white !important;
-}
-
-/* Input - Soft Purple Glow Only */
-div[data-testid="stChatInput"] {
-    background: rgba(15, 10, 25, 0.9) !important;
-    border: 1px solid rgba(139, 92, 246, 0.25) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.1) !important;
-}
-</style>
-""", unsafe_allow_html=True)
-# --- END FINAL THEME ---
+try:
+    bg_base64 = get_base64_bg("bg.jpg")
+    st.markdown(f"""
+    <style>
+    .stApp {{
+        background-image: linear-gradient(rgba(5, 8, 15, 0.78), rgba(5, 8, 15, 0.85)), url("data:image/jpg;base64,{bg_base64}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+except FileNotFoundError:
+    pass
+# --- END BACKGROUND ONLY ---
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
