@@ -81,16 +81,13 @@ if st.session_state.page=="voice":
     st.stop()
 
 st.markdown("""
-<h1 style='
-    text-align:center;
-    background: linear-gradient(90deg, #00E5FF, #9D00FF, #00E5FF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-size:48px; font-weight:900;
-    text-shadow: 0 0 30px rgba(0,229,255,0.5);
-    font-family: Audiowide;
-    animation: glow 2s infinite alternate;
-'>⚡ Aditya AI</h1>
+<div style='text-align:center;'>
+    <div style='display:inline-block; background:rgba(0,229,255,0.1); border:1px solid #00E5FF; border-radius:30px; padding:10px 25px;'>
+        <span style='font-size:28px;'>🤖</span>
+        <span style='color:#00E5FF; font-weight:bold; font-size:28px; margin-left:10px;'>Aditya AI</span>
+        <span style='margin-left:15px; color:white; background:#00E5FF; padding:2px 8px; border-radius:10px; font-size:12px;'>ANIME EDITION</span>
+    </div>
+</div>
 """, unsafe_allow_html=True)
 st.caption("Photoshop • Editing • Design • Hindi + English Voice")
 for m in st.session_state.messages:
