@@ -5,14 +5,6 @@ import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
 
-    st.markdown("""
-    <style>
-    .stApp {
-        background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 100%) !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-# --- END ---
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
