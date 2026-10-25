@@ -98,7 +98,7 @@ if inp:
 st.markdown("""
 <style>
 .stApp, [data-testid="stAppViewContainer"] {
-    background: linear-gradient(rgba(0,0,0,0.88), rgba(5,8,15,0.92)), url("https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1920") !important;
+    background: linear-gradient(rgba(0,0,0,0.90), rgba(0,0,0,0.94)), url("https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1920") !important;
     background-size: cover !important;
     background-position: center !important;
     background-attachment: fixed !important;
