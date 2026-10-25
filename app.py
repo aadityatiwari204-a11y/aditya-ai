@@ -95,3 +95,13 @@ if inp:
         st.markdown(ans)
         st.session_state.messages.append({"role":"assistant","content":ans})
     st.session_state.all_chats[st.session_state.current_chat_id]["messages"]=st.session_state.messages
+st.markdown("""
+<style>
+.stApp, [data-testid="stAppViewContainer"] {
+    background: linear-gradient(rgba(5,8,15,0.82), rgba(5,8,15,0.90)), url("https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1920") !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+</style>
+""", unsafe_allow_html=True)
