@@ -81,12 +81,9 @@ if st.session_state.page=="voice":
     st.stop()
 
 st.markdown("""
-<div style='display:flex; align-items:center; gap:15px; padding:5px 0;'>
-    <img src='https://i.imgur.com/8Km9tLL.png' width='55' style='border-radius:50%;'>
-    <div>
-        <h1 style='margin:0; color:#2C4A6E; font-size:36px; font-weight:700; letter-spacing:-1px; font-family: Inter, sans-serif;'>Aditya <span style='color:#7AA5C5; font-weight:400;'>AI</span></h1>
-        <p style='margin:0; color:#888; font-size:12px; letter-spacing:1.5px;'>PHOTOSHOP • EDITING • DESIGN</p>
-    </div>
+<div style='padding:10px 0;'>
+    <h1 style='margin:0; color:white; font-size:38px; font-weight:600; font-family: Inter;'>Aditya AI</h1>
+    <p style='margin:0; color:rgba(255,255,255,0.6); font-size:13px;'>Made by Aditya from Belpahar • Hindi + English Voice</p>
 </div>
 """, unsafe_allow_html=True)
 st.caption("Photoshop • Editing • Design • Hindi + English Voice")
