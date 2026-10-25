@@ -4,25 +4,20 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- PHOTO BACKGROUND ONLY - NO FUNCTION CHANGE ---
-import base64
-from pathlib import Path
-
-bg_path = Path("bg.jpg")
-if bg_path.exists():
-    bg_data = base64.b64encode(bg_path.read_bytes()).decode()
-    st.markdown(f"""
-    <style>
-    .stApp {{
-        background-image: linear-gradient(rgba(5,8,15,0.75), rgba(5,8,15,0.85)), url("data:image/jpeg;base64,{bg_data}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-else:
-    # If bg.jpg not found, use pure CSS decent dark - so you don't get blank screen
+# --- FOREST #4 - NO UPLOAD NEEDED - ONLY BG ---
+st.markdown("""
+<style>
+.stApp {
+    background-image: 
+        linear-gradient(rgba(5,8,15,0.78), rgba(5,8,15,0.88)),
+        url("https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1920");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+</style>
+""", unsafe_allow_html=True)
+# --- END ---
     st.markdown("""
     <style>
     .stApp {
