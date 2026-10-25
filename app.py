@@ -4,20 +4,7 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- FOREST #4 - NO UPLOAD NEEDED - ONLY BG ---
-st.markdown("""
-<style>
-.stApp {
-    background-image: 
-        linear-gradient(rgba(5,8,15,0.78), rgba(5,8,15,0.88)),
-        url("https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1920");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-</style>
-""", unsafe_allow_html=True)
-# --- END ---
+
     st.markdown("""
     <style>
     .stApp {
