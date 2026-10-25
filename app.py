@@ -98,8 +98,11 @@ if inp:
 st.markdown("""
 <style>
 .stApp, [data-testid="stAppViewContainer"] {
-    background: linear-gradient(rgba(0,0,0,0.40), rgba(10,0,30,0.70)), url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920") !important;
-    background-size: cover !important; background-position: center !important; background-attachment: fixed !important;
+    background: linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.25)), url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1920") !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    filter: brightness(1.2);
 }
 </style>
 """, unsafe_allow_html=True)
