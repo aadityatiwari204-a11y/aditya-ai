@@ -4,90 +4,18 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- ANIME THEME - PASTE THIS, DON'T CHANGE ANYTHING ELSE ---
+# --- ANIME THEME FORCE ---
 st.markdown("""
 <style>
-/* Import Anime Font */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Poppins', sans-serif;
-}
-
-/* Main App Background - Anime Night Sky */
-.stApp {
-    background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f0a19 60%, #000000 100%);
-    background-attachment: fixed;
-}
-
-/* Sidebar - Glassmorphism like Gojo's Infinity */
-section[data-testid="stSidebar"] {
-    background: rgba(20, 20, 40, 0.8) !important;
-    backdrop-filter: blur(12px);
-    border-right: 1px solid rgba(139, 92, 246, 0.2);
-}
-
-/* Chat Messages - Anime Bubbles */
-div[data-testid="stChatMessage"] {
-    background: rgba(255, 255, 255, 0.06) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px !important;
-    padding: 16px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-/* User Message - Red Akatsuki Glow */
-div[data-testid="stChatMessage"]:nth-child(odd) {
-    border-left: 3px solid #ef4444;
-}
-
-/* AI Message - Blue Aditya Glow */
-div[data-testid="stChatMessage"]:nth-child(even) {
-    border-left: 3px solid #38bdf8;
-}
-
-/* Title - Aditya AI Neon */
-h1, h2, h3 {
-    background: linear-gradient(90deg, #38bdf8, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700 !important;
-}
-
-/* Buttons - Don't change function, only look */
-.stButton > button {
-    background: rgba(255,255,255,0.08) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    border-radius: 12px !important;
-    color: white !important;
-    transition: 0.2s;
-}
-.stButton > button:hover {
-    background: rgba(139, 92, 246, 0.2) !important;
-    border-color: #8b5cf6 !important;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
-}
-
-/* Input Box - Glowing */
-div[data-testid="stChatInput"] {
-    background: rgba(20, 20, 40, 0.9) !important;
-    border: 1px solid rgba(139, 92, 246, 0.3) !important;
-    border-radius: 20px !important;
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
-}
-
-/* Scrollbar - Anime Style */
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-thumb {
-    background: #8b5cf6;
-    border-radius: 10px;
-}
+.stApp { background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f0a19 80%, #000000 100%) !important; }
+section[data-testid="stSidebar"] > div { background: rgba(20,20,40,0.85) !important; backdrop-filter: blur(12px); }
+div[data-testid="stChatMessage"] { background: rgba(255,255,255,0.07) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 16px !important; }
+h1 { color: #38bdf8 !important; text-shadow: 0 0 20px rgba(56,189,248,0.6) !important; }
+.stButton button { background: rgba(139,92,246,0.15) !important; border: 1px solid rgba(139,92,246,0.4) !important; color: white !important; border-radius: 12px !important; }
+div[data-testid="stChatInput"] { border: 2px solid #8b5cf6 !important; box-shadow: 0 0 20px rgba(139,92,246,0.3) !important; border-radius: 20px !important; }
 </style>
 """, unsafe_allow_html=True)
-# --- ANIME THEME END ---
+# --- END ---
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
