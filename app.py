@@ -4,29 +4,33 @@ from gtts import gTTS
 import io, uuid
 
 st.set_page_config(page_title="Aditya AI - Belpahar", page_icon="🤖", layout="wide")
-# --- BACKGROUND ONLY - FOREST MIST #4 ---
+# --- PHOTO BACKGROUND ONLY - NO FUNCTION CHANGE ---
 import base64
+from pathlib import Path
 
-def get_base64_bg(image_file):
-    with open(image_file, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
-
-try:
-    bg_base64 = get_base64_bg("bg.jpg")
+bg_path = Path("bg.jpg")
+if bg_path.exists():
+    bg_data = base64.b64encode(bg_path.read_bytes()).decode()
     st.markdown(f"""
     <style>
     .stApp {{
-        background-image: linear-gradient(rgba(5, 8, 15, 0.78), rgba(5, 8, 15, 0.85)), url("data:image/jpg;base64,{bg_base64}");
+        background-image: linear-gradient(rgba(5,8,15,0.75), rgba(5,8,15,0.85)), url("data:image/jpeg;base64,{bg_data}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }}
     </style>
     """, unsafe_allow_html=True)
-except FileNotFoundError:
-    pass
-# --- END BACKGROUND ONLY ---
+else:
+    # If bg.jpg not found, use pure CSS decent dark - so you don't get blank screen
+    st.markdown("""
+    <style>
+    .stApp {
+        background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 100%) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+# --- END ---
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color:white; }
